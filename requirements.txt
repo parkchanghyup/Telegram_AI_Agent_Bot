@@ -1,0 +1,9 @@
+# Core libraries for Agent, MCP, and Telegram
+openai-agents
+fastmcp
+python-telegram-bot
+
+# Utility libraries
+python-dotenv
+requests
+openai

@@ -1,0 +1,10 @@
+{
+    "mcpServers": {
+      "naver-search": {
+        "command": "python",
+        "args": [
+          "naver_mcp_server.py"
+        ]
+      }
+    }
+}
