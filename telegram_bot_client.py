@@ -24,9 +24,6 @@ if not BOT_TOKEN:
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY 환경변수를 .env 파일에 설정해주세요.")
 
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
 mcp_agent = None
 mcp_servers = []
 
