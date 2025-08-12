@@ -19,10 +19,19 @@ logging.basicConfig(
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
+# Instruction prompt 설정 파일 경로 및 상수 로딩
+PROMPT_PATH = os.path.join(os.path.dirname(__file__), "prompt.txt")
+try:
+    with open(PROMPT_PATH, "r", encoding="utf-8") as f:
+        INSTRUCTIONS = f.read().strip()
+except FileNotFoundError as exc:
+    raise FileNotFoundError("prompt.txt 파일이 telegram_mcp_bot 디렉터리에 없습니다.") from exc
+
 if not BOT_TOKEN:
     raise ValueError("TELEGRAM_BOT_TOKEN 환경변수를 .env 파일에 설정해주세요.")
 if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY 환경변수를 .env 파일에 설정해주세요.")
+
 
 mcp_agent = None
 mcp_servers = []
@@ -47,7 +56,7 @@ async def setup_agent_and_servers():
 
     mcp_agent = Agent(
         name="Assistant",
-        instructions="당신은 유용한 AI 어시스턴트입니다. 사용자의 질문에 답변하고, 필요시 뉴스 검색 기능을 사용해 최신 정보를 찾아줄 수 있습니다.",
+        instructions=INSTRUCTIONS,
         model="gpt-4o-mini",
         mcp_servers=mcp_servers
     )
