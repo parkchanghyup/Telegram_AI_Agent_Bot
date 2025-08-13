@@ -1,11 +1,23 @@
 import os
 import re
+import time
+import logging
 from typing import List, Dict
 import requests
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
 load_dotenv()
+
+# Configure file-based logging for the MCP server
+os.makedirs('logs', exist_ok=True)
+logger = logging.getLogger("naver_mcp_server")
+if not logger.handlers:
+    logger.setLevel(logging.INFO)
+    fh = logging.FileHandler('logs/naver_mcp_server.log', encoding='utf-8')
+    fh.setLevel(logging.INFO)
+    fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(fh)
 
 mcp = FastMCP("naver_search_server")
 
@@ -49,12 +61,17 @@ def search_naver_news(query: str, display: int = 5) -> List[Dict]:
     }
     
     try:
-        response = requests.get(BASE_URL, headers=headers, params=params)
+        start_time = time.perf_counter()
+        logger.info("Naver API 호출 시작: query='%s', display=%s", query, display)
+        response = requests.get(BASE_URL, headers=headers, params=params, timeout=15)
         response.raise_for_status()
         data = response.json()
-        return _clean_news_data(data.get("items", []))
+        cleaned = _clean_news_data(data.get("items", []))
+        duration_ms = (time.perf_counter() - start_time) * 1000.0
+        logger.info("Naver API 호출 성공: duration_ms=%.1f, result_count=%d", duration_ms, len(cleaned))
+        return cleaned
     except requests.exceptions.RequestException as e:
-        print(f"네이버 API 요청 중 오류가 발생했습니다: {e}")
+        logger.error("Naver API 요청 오류: %s", str(e))
         return []
 
 if __name__ == "__main__":
