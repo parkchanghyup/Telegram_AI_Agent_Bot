@@ -75,12 +75,45 @@ async def setup_agent_and_servers():
         await server.connect()
         logging.info(f"MCP 서버 연결 성공: name={server_name}")
         mcp_servers.append(server)
+        mcp_server_map[server_name] = server
 
+    model = OpenAIChatCompletionsModel(
+        model="conandoyle247/jan-nano-4b-gguf",
+        openai_client=AsyncOpenAI(base_url="http://localhost:11434/v1")
+    )
+
+
+    # 에이전트 분리: 단순 Q&A 에이전트와 네이버 검색 에이전트
+    qa_agent = Agent(
+        name="QnA Agent",
+        instructions=INSTRUCTIONS+'/no_think',
+        model=model
+    )
+
+    naver_instructions = (
+        "You are a news search specialist. Use the MCP tool to search latest Naver news.\n"
+        "- Prefer concise bullet summaries with title, brief gist, and link.\n"
+        "- If the query is not about news or search, do not answer; rely on triage."
+        "- answer in Korean"
+    )
+    # 특정 MCP 서버(예: 'naver-search')만 검색 에이전트에 연결
+    naver_server = mcp_server_map.get('naver-search')
+    naver_agent = Agent(
+        name="Naver Search Agent",
+        instructions=naver_instructions,
+        model=model,
+        mcp_servers=[naver_server] if naver_server else []
+    )
+
+    # 트리아지 에이전트: 뉴스/검색 관련 요청은 네이버 검색 에이전트로, 그 외는 QnA로 전달
     mcp_agent = Agent(
-        name="Assistant",
-        instructions=INSTRUCTIONS,
-        model="gpt-4o-mini",
-        mcp_servers=mcp_servers
+        name="Triage Agent",
+        instructions=(
+            "If the user asks for news, headlines, today's updates, or mentions 검색/뉴스/네이버/기사/실시간, "
+            "hand it off to the Naver Search Agent. Otherwise, hand it off to the QnA Agent. "
+            "If unclear, prefer QnA Agent."
+        ),
+        handoffs=[naver_agent, qa_agent]
     )
     logging.info("AI 에이전트 및 MCP 서버가 성공적으로 설정되었습니다.")
 
