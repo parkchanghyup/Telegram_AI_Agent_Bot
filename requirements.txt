@@ -1,9 +1,10 @@
-# Core libraries for Agent, MCP, and Telegram
-openai-agents
-fastmcp
+openai-agents==0.0.17
+fastmcp>=2.0.0
 python-telegram-bot
-
-# Utility libraries
+uvicorn
+fastapi>=0.109.0
+pydantic>=2.10.0,<3
 python-dotenv
 requests
-openai
+openai>=1.81.0
+beautifulsoup4
