@@ -3,11 +3,15 @@ import logging
 import asyncio
 import sys
 import json
+import time
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from agents import Agent, Runner
+# from agents import Agent, Runner
 from agents.mcp import MCPServerStdio
+from agents import Agent, Runner, OpenAIChatCompletionsModel, AsyncOpenAI, OpenAIChatCompletionsModel, function_tool
+
+
 
 load_dotenv()
 
@@ -15,6 +19,15 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+# Ensure file-based logging
+os.makedirs('logs', exist_ok=True)
+_root_logger = logging.getLogger()
+if not any(isinstance(h, logging.FileHandler) for h in _root_logger.handlers):
+    _file_handler = logging.FileHandler('logs/bot.log', encoding='utf-8')
+    _file_handler.setLevel(logging.INFO)
+    _file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    _root_logger.addHandler(_file_handler)
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -35,15 +48,23 @@ if not OPENAI_API_KEY:
 
 mcp_agent = None
 mcp_servers = []
+mcp_server_map = {}
+
+def _truncate_for_log(text: str, length: int = 200) -> str:
+    if text is None:
+        return ''
+    text = str(text)
+    return text if len(text) <= length else text[:length] + '…'
 
 async def setup_agent_and_servers():
     """MCP 서버와 AI 에이전트를 설정합니다."""
     global mcp_agent, mcp_servers
     
-    with open('mcp_config.json', 'r') as f:
+    with open('mcp_config.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
-    
-    for server_config in config.get('mcpServers', {}).values():
+
+    for server_name, server_config in config.get('mcpServers', {}).items():
+        logging.info(f"MCP 서버 준비: name={server_name}, command={server_config.get('command')}, args={server_config.get('args', [])}")
         server = MCPServerStdio(
             params={
                 "command": server_config.get("command"),
@@ -52,6 +73,7 @@ async def setup_agent_and_servers():
             cache_tools_list=True
         )
         await server.connect()
+        logging.info(f"MCP 서버 연결 성공: name={server_name}")
         mcp_servers.append(server)
 
     mcp_agent = Agent(
@@ -83,8 +105,18 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     processing_message = await update.message.reply_text("🔄 생각 중...")
 
     try:
+        start_time = time.perf_counter()
         result = await Runner.run(mcp_agent, input=user_message)
+        duration_ms = (time.perf_counter() - start_time) * 1000.0
         response_text = str(result.final_output)
+
+        # Log concise Q&A record
+        logging.info(
+            "QnA 처리 완료: duration_ms=%.1f, user='%s', response='%s'",
+            duration_ms,
+            _truncate_for_log(user_message),
+            _truncate_for_log(response_text)
+        )
 
         await processing_message.delete()
         await update.message.reply_text(response_text)
