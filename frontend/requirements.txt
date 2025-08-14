@@ -1,0 +1,3 @@
+Flask[async]
+python-dotenv
+openai-agents==0.0.17

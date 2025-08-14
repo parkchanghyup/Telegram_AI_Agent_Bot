@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Agent Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>MCP Servers</h3>
+                <button class="sidebar-toggle" id="sidebar-toggle">×</button>
+            </div>
+            <div class="sidebar-content">
+                <div class="mcp-servers" id="mcp-servers">
+                    <!-- MCP servers will be loaded here -->
+                </div>
+                <div class="sidebar-actions">
+                    <button class="btn-secondary" id="refresh-config">Refresh</button>
+                    <button class="btn-primary" id="save-config">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <button class="sidebar-toggle" id="sidebar-open">☰</button>
+                    <h2>MCP Agent</h2>
+                </div>
+                <div class="chat-box" id="chat-box">
+                    <!-- Chat messages will be appended here -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="user-input" placeholder="Type a message...">
+                    <button id="send-btn">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

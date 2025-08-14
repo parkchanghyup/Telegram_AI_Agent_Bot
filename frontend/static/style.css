@@ -1,0 +1,336 @@
+body {
+    background-color: #131314;
+    color: #e3e3e3;
+    font-family: 'Google Sans', sans-serif;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 350px;
+    background-color: #1e1f20;
+    border-right: 1px solid #3c4043;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar.collapsed {
+    transform: translateX(-100%);
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #3c4043;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: #e3e3e3;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.sidebar-toggle:hover {
+    background-color: #3c4043;
+}
+
+.sidebar-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.mcp-servers {
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+.sidebar-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    flex: 1;
+}
+
+.btn-primary {
+    background-color: #4285f4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #5a95f5;
+}
+
+.btn-secondary {
+    background-color: #3c4043;
+    color: #e3e3e3;
+}
+
+.btn-secondary:hover {
+    background-color: #545458;
+}
+
+/* Main Content */
+.main-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.chat-container {
+    width: 100%;
+    max-width: 800px;
+    height: 90vh;
+    background-color: #1e1f20;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.chat-header {
+    background-color: #1e1f20;
+    padding: 20px;
+    border-bottom: 1px solid #3c4043;
+    border-radius: 10px 10px 0 0;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.chat-box {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-box .message {
+    margin-bottom: 15px;
+    padding: 10px 15px;
+    border-radius: 20px;
+    max-width: 70%;
+    line-height: 1.5;
+}
+
+.chat-box .user-message {
+    background-color: #3c4043;
+    align-self: flex-end;
+}
+
+.chat-box .bot-message {
+    background-color: #4285f4;
+    color: white;
+    align-self: flex-start;
+}
+
+.chat-input {
+    display: flex;
+    padding: 20px;
+    border-top: 1px solid #3c4043;
+}
+
+#user-input {
+    flex-grow: 1;
+    background-color: #3c4043;
+    border: none;
+    padding: 15px;
+    border-radius: 25px;
+    color: #e3e3e3;
+    font-size: 16px;
+}
+
+#user-input:focus {
+    outline: none;
+}
+
+#send-btn {
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 25px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#send-btn:hover {
+    background-color: #5a95f5;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1e1f20;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3c4043;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* MCP Server Configuration Styles */
+.server-item {
+    background-color: #2a2b2c;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #3c4043;
+}
+
+.server-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.server-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #4285f4;
+}
+
+.server-status {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.server-status.active {
+    background-color: #34a853;
+    color: white;
+}
+
+.server-status.inactive {
+    background-color: #ea4335;
+    color: white;
+}
+
+.server-details {
+    margin-top: 10px;
+}
+
+.server-field {
+    margin-bottom: 10px;
+}
+
+.server-field label {
+    display: block;
+    font-size: 12px;
+    color: #9aa0a6;
+    margin-bottom: 5px;
+}
+
+.server-field input, .server-field textarea {
+    width: 100%;
+    background-color: #3c4043;
+    border: 1px solid #5f6368;
+    border-radius: 4px;
+    padding: 8px;
+    color: #e3e3e3;
+    font-size: 14px;
+    font-family: 'Google Sans', sans-serif;
+}
+
+.server-field input:focus, .server-field textarea:focus {
+    outline: none;
+    border-color: #4285f4;
+}
+
+.server-field textarea {
+    resize: vertical;
+    min-height: 60px;
+    font-family: monospace;
+}
+
+.server-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-edit {
+    background-color: #fbbc04;
+    color: #202124;
+}
+
+.btn-edit:hover {
+    background-color: #fdd835;
+}
+
+.btn-delete {
+    background-color: #ea4335;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #f87171;
+}
+
+.add-server {
+    background-color: #34a853;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.add-server:hover {
+    background-color: #4ade80;
+}
