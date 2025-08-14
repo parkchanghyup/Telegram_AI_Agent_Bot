@@ -1,10 +1,18 @@
 {
+    "llm_provider": "ollama",
+    "openai_api_key": null,
+    "ollama_base_url": "http://localhost:11434/v1",
+    "model_names": {
+        "qa_model": "conandoyle247/jan-nano-4b-gguf",
+        "naver_model": "conandoyle247/jan-nano-4b-gguf",
+        "triage_model": "conandoyle247/jan-nano-4b-gguf"
+    },
     "mcpServers": {
-      "naver-search": {
-        "command": "python",
-        "args": [
-          "src/naver_mcp_server.py"
-        ]
-      }
+        "naver-search": {
+            "command": "python",
+            "args": [
+                "src/naver_mcp_server.py"
+            ]
+        }
     }
 }

@@ -10,7 +10,7 @@ Create a `.env` file in the project root and set the variables for your environm
 
 ```env
 # Telegram Bot
-TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"ㅋ
 
 # LLM provider: "openai" or "ollama"
 LLM_PROVIDER="openai"
