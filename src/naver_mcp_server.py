@@ -26,11 +26,6 @@ NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
 NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
 BASE_URL = "https://openapi.naver.com/v1/search/news.json"
 
-def _remove_html_tags(text: str) -> str:
-    """HTML 태그를 제거합니다."""
-    clean = re.compile('<.*?>')
-    return re.sub(clean, '', text)
-
 def _fetch_article_content(url: str) -> str:
     """뉴스 URL에 접속하여 본문 내용을 가져옵니다."""
     try:
@@ -38,13 +33,37 @@ def _fetch_article_content(url: str) -> str:
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # 다양한 뉴스 플랫폼의 본문 컨테이너를 시도
-        article_body = soup.find('article', id='dic_area') or \
-                       soup.find('div', id='newsct_article') or \
-                       soup.find('div', class_='article_body') # 일반적인 클래스 추가
+        # 다양한 뉴스 플랫폼에 대응하기 위한 선택자 리스트
+        selectors = [
+            'article#dic_area',                 # 네이버 뉴스
+            'div#newsct_article',               # 네이버 뉴스
+            'div.article_body',                 # 일반적인 클래스
+            'div#article_body',                 # ID 형식
+            'div#articleBodyContents',          # 연합뉴스 등
+            'div.article_view',                 # 여러 언론사
+            'div.article-view-content-wrapper', # ITWorld
+            'div#content',                      # 일반적인 ID
+            'div.entry-content',                # 블로그/워드프레스 기반 사이트
+            'div.post-content',                 # 블로그/워드프레스 기반 사이트
+            'div#main-content',                 # 일반적인 ID
+            'article',                          # 시맨틱 태그
+            'main'                              # 시맨틱 태그
+        ]
+
+        article_body = None
+        for selector in selectors:
+            article_body = soup.select_one(selector)
+            if article_body:
+                break
 
         if article_body:
-            return article_body.get_text(separator='\\n', strip=True)
+            # 본문 내용에서 불필요한 태그(스크립트, 스타일, 광고 등) 제거
+            for tag in article_body.find_all(['script', 'style', 'iframe', 'aside', 'footer', 'header', 'nav']):
+                tag.decompose()
+            
+            # 텍스트 추출
+            return article_body.get_text(separator='\n', strip=True)
+
         return "본문 내용을 찾을 수 없습니다."
     except requests.exceptions.RequestException as e:
         logger.warning("뉴스 본문(%s)을 가져오는 중 오류 발생: %s", url, e)
@@ -70,6 +89,7 @@ def search_naver_news(query: str) -> List[Dict]:
         response = requests.get(BASE_URL, headers=headers, params=params, timeout=15)
         response.raise_for_status()
         news_items = response.json().get("items", [])
+        logger.info("Naver API 응답 (처음 3개): %s", news_items[:3])  # 응답 로깅
     except requests.exceptions.RequestException as e:
         logger.error("Naver API 요청 오류: %s", str(e))
         return []
@@ -83,12 +103,9 @@ def search_naver_news(query: str) -> List[Dict]:
     results = []
     for item in news_items:
         link = item.get("link", "")
-        # 네이버 뉴스 링크가 아닌 경우 건너뜁니다.
-        if 'n.news.naver.com' not in link:
-            continue
+        logger.info(f"뉴스 기사 처리 중: {item.get('title')}, link: {link}") # 각 기사 링크 로깅
 
         title = item.get("title", "")
-        print('title', title)
         content = _fetch_article_content(link)
         
         results.append({
