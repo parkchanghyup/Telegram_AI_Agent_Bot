@@ -141,8 +141,9 @@ body {
 
 .collapsible-content {
     max-height: 0;
-    overflow-y: auto;
-    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+    padding: 0 15px;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
     background-color: #2a2b2c;
     border-radius: 8px;
     margin-top: 10px;

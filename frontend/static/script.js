@@ -16,6 +16,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentConfig = {};
 
+    // Helper function to update collapsible section height
+    const updateCollapsibleHeight = (sectionId) => {
+        const content = document.getElementById(sectionId);
+        if (content && content.classList.contains('expanded')) {
+            // Use a timeout to allow the DOM to update before getting scrollHeight
+            setTimeout(() => {
+                // Reset max-height to get accurate scrollHeight
+                content.style.maxHeight = 'none';
+                const newHeight = content.scrollHeight;
+                content.style.maxHeight = newHeight + "px";
+            }, 10);
+        }
+    };
+
     // Chat functionality
     const sendMessage = async () => {
         const messageText = userInput.value.trim();
@@ -157,14 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
             serverListItems.appendChild(serverElement);
         });
 
-        // After populating, update max-height if the section is expanded
-        const content = document.getElementById('mcp-servers');
-        if (content.classList.contains('expanded')) {
-            // Use a timeout to allow the DOM to update before getting scrollHeight
-            setTimeout(() => {
-                content.style.maxHeight = content.scrollHeight + "px";
-            }, 0);
-        }
+        // Update collapsible section height after adding servers
+        updateCollapsibleHeight('mcp-servers');
     };
 
     const createServerElement = (name, config, index) => {
@@ -188,6 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm(`Are you sure you want to delete server "${serverName}"?`)) {
             currentConfig.mcpServers.splice(index, 1);
             displayMcpServers(currentConfig.mcpServers);
+            // Update height after server deletion
+            setTimeout(() => updateCollapsibleHeight('mcp-servers'), 50);
         }
     };
 
@@ -211,11 +221,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (importedData.mcpServers && Array.isArray(importedData.mcpServers)) {
                     // New format: wrapped in mcpServers array
                     serversToImport = importedData.mcpServers;
+                } else if (importedData.mcpServers && typeof importedData.mcpServers === 'object') {
+                    // Smithery format: mcpServers is an object with server names as keys
+                    serversToImport = Object.entries(importedData.mcpServers).map(([name, config]) => {
+                        // Ensure config is an object, not a string
+                        if (typeof config === 'object' && config !== null) {
+                            return {
+                                name: name,
+                                ...config
+                            };
+                        } else {
+                            // If config is a string or primitive, treat it as URL
+                            return {
+                                name: name,
+                                url: String(config)
+                            };
+                        }
+                    });
                 } else if (importedData.name && (importedData.url || importedData.command)) {
                     // Single server object format
                     serversToImport = [importedData];
                 } else {
-                    // Old format: object with server names as keys
+                    // Old format: object with server names as keys (direct at root level)
                     serversToImport = Object.entries(importedData).map(([name, config]) => {
                         // Ensure config is an object, not a string
                         if (typeof config === 'object' && config !== null) {
@@ -262,6 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (importedCount > 0) {
                 displayMcpServers(currentConfig.mcpServers);
                 jsonImportTextarea.value = '';
+                // Update height after importing servers
+                setTimeout(() => updateCollapsibleHeight('mcp-servers'), 50);
                 alert(`Successfully imported ${importedCount} server(s). Don't forget to save your changes!`);
             } else {
                 alert('No valid server configurations found in the JSON.');
@@ -319,14 +348,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Refresh config and tools after successful initialization
                         loadConfig();
                         loadTools();
+                        // Update heights after reload
+                        setTimeout(() => {
+                            updateCollapsibleHeight('mcp-servers');
+                            updateCollapsibleHeight('mcp-tools');
+                        }, 100);
                     } else {
                         appendMessage('bot-message', `⚠️ 설정은 저장되었지만 에이전트 초기화 실패: ${initResult.error || 'Unknown error'}`);
                         loadConfig(); // Still refresh config even if init failed
+                        setTimeout(() => updateCollapsibleHeight('mcp-servers'), 100);
                     }
                 } catch (initError) {
                     console.error('Agent initialization error:', initError);
                     appendMessage('bot-message', `⚠️ 설정은 저장되었지만 에이전트 초기화 중 오류 발생: ${initError.message}`);
                     loadConfig(); // Still refresh config even if init failed
+                    setTimeout(() => updateCollapsibleHeight('mcp-servers'), 100);
                 }
             } else {
                 alert('Error saving configuration: ' + result.error);
@@ -389,13 +425,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // After populating, update max-height if the section is expanded
-        const content = document.getElementById('mcp-tools');
-        if (content.classList.contains('expanded')) {
-            setTimeout(() => {
-                content.style.maxHeight = content.scrollHeight + "px";
-            }, 0);
-        }
+        // Update collapsible section height after adding tools
+        updateCollapsibleHeight('mcp-tools');
     };
 
     // Event listeners
@@ -417,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         content.classList.toggle('expanded');
         if (content.classList.contains('expanded')) {
             icon.style.transform = 'rotate(180deg)';
-            content.style.maxHeight = content.scrollHeight + "px";
+            updateCollapsibleHeight('mcp-servers');
         } else {
             icon.style.transform = 'rotate(0deg)';
             content.style.maxHeight = null;
@@ -430,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
         content.classList.toggle('expanded');
         if (content.classList.contains('expanded')) {
             icon.style.transform = 'rotate(180deg)';
-            content.style.maxHeight = content.scrollHeight + "px";
+            updateCollapsibleHeight('mcp-tools');
         } else {
             icon.style.transform = 'rotate(0deg)';
             content.style.maxHeight = null;
