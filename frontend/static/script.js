@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebarOpenBtn = document.getElementById('sidebar-open-btn');
     const mcpServers = document.getElementById('mcp-servers');
-    const refreshBtn = document.getElementById('refresh-config');
     const saveBtn = document.getElementById('save-config');
     const newChatBtn = document.getElementById('new-chat-btn');
     const mcpServersToggle = document.getElementById('mcp-servers-toggle');
@@ -78,7 +77,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const appendMessage = (senderClass, text, messageId = null) => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', senderClass);
-        messageElement.textContent = text;
+        
+        // Convert markdown to HTML for bot messages, keep plain text for user messages
+        if (senderClass === 'bot-message' && window.marked) {
+            try {
+                // Configure marked for security and better rendering
+                const renderer = new marked.Renderer();
+                
+                // Custom link renderer to open in new tab and add security
+                renderer.link = function(href, title, text) {
+                    return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+                };
+                
+                marked.setOptions({
+                    renderer: renderer,
+                    breaks: true,
+                    gfm: true,
+                    sanitize: false,
+                    smartLists: true,
+                    smartypants: false
+                });
+                
+                messageElement.innerHTML = marked.parse(text);
+                
+                // Apply syntax highlighting to code blocks
+                if (window.hljs) {
+                    messageElement.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                    });
+                }
+            } catch (error) {
+                console.error('Markdown parsing error:', error);
+                messageElement.textContent = text; // Fallback to plain text
+            }
+        } else {
+            messageElement.textContent = text;
+        }
+        
         if (messageId) {
             messageElement.id = messageId;
         }
@@ -98,35 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessage('bot-message', '안녕하세요! 새로운 대화를 시작합니다. 무엇을 도와드릴까요?');
     };
 
-    // Agent reinitialization
-    const reinitializeAgent = async () => {
-        try {
-            appendMessage('bot-message', '🔄 에이전트를 다시 초기화하고 있습니다...');
-            
-            const response = await fetch('/api/init', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                appendMessage('bot-message', '✅ 에이전트가 성공적으로 초기화되었습니다!');
-                // Refresh tools and config after successful initialization
-                setTimeout(() => {
-                    loadConfig();
-                    loadTools();
-                }, 500);
-            } else {
-                appendMessage('bot-message', `❌ 초기화 실패: ${result.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error('Reinitialize error:', error);
-            appendMessage('bot-message', `❌ 초기화 중 오류 발생: ${error.message}`);
-        }
-    };
+
 
     // MCP Configuration functionality
     const loadConfig = async () => {
@@ -293,8 +300,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
             if (result.success) {
-                alert('Configuration saved successfully!');
-                loadConfig();
+                // Show initial success message
+                appendMessage('bot-message', '✅ 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
+                
+                // Reinitialize agent after successful save
+                try {
+                    const initResponse = await fetch('/api/init', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const initResult = await initResponse.json();
+                    
+                    if (initResult.success) {
+                        appendMessage('bot-message', '🎉 설정 저장 및 에이전트 초기화가 완료되었습니다!');
+                        // Refresh config and tools after successful initialization
+                        loadConfig();
+                        loadTools();
+                    } else {
+                        appendMessage('bot-message', `⚠️ 설정은 저장되었지만 에이전트 초기화 실패: ${initResult.error || 'Unknown error'}`);
+                        loadConfig(); // Still refresh config even if init failed
+                    }
+                } catch (initError) {
+                    console.error('Agent initialization error:', initError);
+                    appendMessage('bot-message', `⚠️ 설정은 저장되었지만 에이전트 초기화 중 오류 발생: ${initError.message}`);
+                    loadConfig(); // Still refresh config even if init failed
+                }
             } else {
                 alert('Error saving configuration: ' + result.error);
             }
@@ -375,15 +408,8 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarToggle.addEventListener('click', toggleSidebar);
     sidebarOpenBtn.addEventListener('click', toggleSidebar);
     newChatBtn.addEventListener('click', clearChat);
-    refreshBtn.addEventListener('click', loadConfig);
     saveBtn.addEventListener('click', saveConfig);
     importJsonBtn.addEventListener('click', importJson);
-    
-    // Add reinitialize agent button listener
-    const reinitBtn = document.getElementById('reinit-agent');
-    if (reinitBtn) {
-        reinitBtn.addEventListener('click', reinitializeAgent);
-    }
 
     mcpServersToggle.addEventListener('click', () => {
         const content = document.getElementById('mcp-servers');

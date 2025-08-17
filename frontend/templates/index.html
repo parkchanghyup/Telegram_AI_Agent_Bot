@@ -35,11 +35,17 @@
                                 <i class="fas fa-file-import"></i>
                                 <span>Import Configuration</span>
                             </div>
-                            <textarea id="json-import" placeholder='[{"name": "server-name", "command": "python", "args": ["script.py"]}]'></textarea>
-                            <button class="btn-import-simple" id="import-json">
-                                <i class="fas fa-plus"></i>
-                                Import
-                            </button>
+                            <textarea id="json-import" placeholder='{"name": "server-name", "url": "https://temp.com", }'></textarea>
+                            <div class="import-buttons">
+                                <button class="btn-import-simple" id="import-json">
+                                    <i class="fas fa-plus"></i>
+                                    Import
+                                </button>
+                                <button class="btn-save-config" id="save-config">
+                                    <i class="fas fa-save"></i>
+                                    Save Changes
+                                </button>
+                            </div>
                         </div>
                         <div class="server-list-section">
                             <div class="list-header">
@@ -49,20 +55,6 @@
                             <div id="server-list-items">
                                 <!-- MCP servers will be loaded here -->
                             </div>
-                        </div>
-                        <div class="server-list-footer">
-                            <button class="btn-secondary" id="refresh-config">
-                                <i class="fas fa-sync-alt"></i>
-                                Refresh
-                            </button>
-                            <button class="btn-secondary" id="reinit-agent">
-                                <i class="fas fa-redo"></i>
-                                Reinitialize Agent
-                            </button>
-                            <button class="btn-primary" id="save-config">
-                                <i class="fas fa-save"></i>
-                                Save Changes
-                            </button>
                         </div>
                     </div>
                 </div>

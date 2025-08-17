@@ -202,14 +202,7 @@ body {
     line-height: 1.3;
 }
 
-.server-list-footer {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #3c4043;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
+
 
 /* Main Content (Gemini Style Chat) */
 .main-content {
@@ -283,6 +276,112 @@ body {
     background-color: #4285f4;
     color: white;
     align-self: flex-start;
+}
+
+/* Markdown styling within bot messages */
+.bot-message h1, .bot-message h2, .bot-message h3, .bot-message h4, .bot-message h5, .bot-message h6 {
+    margin: 10px 0 5px 0;
+    font-weight: 600;
+}
+
+.bot-message h1 { font-size: 1.2em; }
+.bot-message h2 { font-size: 1.15em; }
+.bot-message h3 { font-size: 1.1em; }
+.bot-message h4, .bot-message h5, .bot-message h6 { font-size: 1em; }
+
+.bot-message p {
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.bot-message ul, .bot-message ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.bot-message li {
+    margin: 4px 0;
+}
+
+.bot-message code {
+    background-color: rgba(255, 255, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+    font-size: 0.9em;
+}
+
+.bot-message pre {
+    background-color: #282c34 !important; /* atom-one-dark background */
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 10px 0;
+    border-left: 4px solid #61dafb;
+}
+
+.bot-message pre code {
+    background: none !important;
+    padding: 0;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: #abb2bf; /* atom-one-dark text color */
+}
+
+/* Override highlight.js styles to fit our theme */
+.bot-message pre code.hljs {
+    background: #282c34 !important;
+    padding: 0;
+}
+
+.bot-message blockquote {
+    border-left: 4px solid rgba(255, 255, 255, 0.3);
+    margin: 10px 0;
+    padding: 8px 16px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 0 8px 8px 0;
+}
+
+.bot-message a {
+    color: #a8c7fa;
+    text-decoration: underline;
+}
+
+.bot-message a:hover {
+    color: #c8e1ff;
+}
+
+.bot-message strong, .bot-message b {
+    font-weight: 600;
+}
+
+.bot-message em, .bot-message i {
+    font-style: italic;
+}
+
+.bot-message hr {
+    border: none;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.2);
+    margin: 15px 0;
+}
+
+.bot-message table {
+    border-collapse: collapse;
+    margin: 10px 0;
+    width: 100%;
+    font-size: 0.9em;
+}
+
+.bot-message th, .bot-message td {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.bot-message th {
+    background-color: rgba(255, 255, 255, 0.1);
+    font-weight: 600;
 }
 
 .chat-input {
@@ -518,9 +617,14 @@ body {
     font-style: normal;
 }
 
-.btn-import-simple {
-    background-color: #4285f4;
-    color: white;
+/* Import buttons container */
+.import-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.btn-import-simple, .btn-save-config {
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
@@ -530,16 +634,32 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    transition: background-color 0.2s ease;
-    width: 100%;
+    transition: all 0.2s ease;
+    flex: 1;
     justify-content: center;
+}
+
+.btn-import-simple {
+    background-color: #4285f4;
+    color: white;
 }
 
 .btn-import-simple:hover {
     background-color: #5a95f5;
 }
 
-.btn-import-simple i {
+.btn-save-config {
+    background: linear-gradient(135deg, #34a853 0%, #4ade80 100%);
+    color: white;
+}
+
+.btn-save-config:hover {
+    background: linear-gradient(135deg, #4ade80 0%, #5de88a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(52, 168, 83, 0.3);
+}
+
+.btn-import-simple i, .btn-save-config i {
     font-size: 12px;
 }
 
