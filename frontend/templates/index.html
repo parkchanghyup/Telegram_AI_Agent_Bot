@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCP Agent Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -11,25 +12,79 @@
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h3>MCP Servers</h3>
-                <button class="sidebar-toggle" id="sidebar-toggle">×</button>
+                <div class="header-top">
+                    <img src="{{ url_for('static', filename='mcp-8x.png') }}" alt="MCP Logo" class="logo">
+                    <button class="sidebar-toggle" id="sidebar-toggle" title="Collapse sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                <button class="new-chat-btn" id="new-chat-btn">
+                    <i class="fas fa-plus"></i>
+                    <span>New Chat</span>
+                </button>
             </div>
             <div class="sidebar-content">
-                <div class="mcp-servers" id="mcp-servers">
-                    <!-- MCP servers will be loaded here -->
+                <div class="collapsible-section">
+                    <button class="collapsible-header" id="mcp-servers-toggle">
+                        <h3 class="sidebar-title">MCP Servers</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="collapsible-content mcp-servers" id="mcp-servers">
+                        <div class="json-import-simple">
+                            <div class="import-header">
+                                <i class="fas fa-file-import"></i>
+                                <span>Import Configuration</span>
+                            </div>
+                            <textarea id="json-import" placeholder='[{"name": "server-name", "command": "python", "args": ["script.py"]}]'></textarea>
+                            <button class="btn-import-simple" id="import-json">
+                                <i class="fas fa-plus"></i>
+                                Import
+                            </button>
+                        </div>
+                        <div class="server-list-section">
+                            <div class="list-header">
+                                <i class="fas fa-server"></i>
+                                <span>Active Servers</span>
+                            </div>
+                            <div id="server-list-items">
+                                <!-- MCP servers will be loaded here -->
+                            </div>
+                        </div>
+                        <div class="server-list-footer">
+                            <button class="btn-secondary" id="refresh-config">
+                                <i class="fas fa-sync-alt"></i>
+                                Refresh
+                            </button>
+                            <button class="btn-secondary" id="reinit-agent">
+                                <i class="fas fa-redo"></i>
+                                Reinitialize Agent
+                            </button>
+                            <button class="btn-primary" id="save-config">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="sidebar-actions">
-                    <button class="btn-secondary" id="refresh-config">Refresh</button>
-                    <button class="btn-primary" id="save-config">Save Changes</button>
+                <div class="collapsible-section">
+                    <button class="collapsible-header" id="mcp-tools-toggle">
+                        <h3 class="sidebar-title">MCP Tools</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="collapsible-content mcp-tools" id="mcp-tools">
+                        <!-- MCP tools will be loaded here -->
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Main Chat Area -->
         <div class="main-content">
+            <button class="sidebar-toggle open-btn" id="sidebar-open-btn" title="Expand sidebar">
+                <i class="fas fa-chevron-right"></i>
+            </button>
             <div class="chat-container">
                 <div class="chat-header">
-                    <button class="sidebar-toggle" id="sidebar-open">☰</button>
                     <h2>MCP Agent</h2>
                 </div>
                 <div class="chat-box" id="chat-box">

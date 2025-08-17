@@ -1,3 +1,4 @@
+/* Basic Styles */
 body {
     background-color: #131314;
     color: #e3e3e3;
@@ -12,101 +13,226 @@ body {
     height: 100vh;
 }
 
-/* Sidebar Styles */
+/* Sidebar Styles (ChatGPT Layout, Gemini Colors) */
 .sidebar {
-    width: 350px;
-    background-color: #1e1f20;
+    width: 400px;
+    background-color: #202123; /* A slightly different dark for contrast */
     border-right: 1px solid #3c4043;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: width 0.3s ease, padding 0.3s ease;
+    padding: 10px;
+    box-sizing: border-box;
     z-index: 1000;
 }
 
 .sidebar.collapsed {
-    transform: translateX(-100%);
+    width: 0;
+    padding: 0;
+    overflow: hidden;
 }
 
 .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid #3c4043;
+    display: flex;
+    flex-direction: column; /* 세로 배치 */
+    gap: 15px; /* 섹션 사이 간격 */
+    margin-bottom: 20px;
+}
+
+.header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
 }
 
-.sidebar-header h3 {
-    margin: 0;
-    font-size: 18px;
+.logo {
+    height: 28px;
+    width: auto;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    margin-right: auto;
+}
+
+.sidebar.collapsed .logo {
+    opacity: 0;
+}
+
+.new-chat-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: transparent;
+    border: 1px solid #5f6368;
+    color: #e3e3e3;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.new-chat-btn:hover {
+    background-color: #3c4043;
 }
 
 .sidebar-toggle {
-    background: none;
-    border: none;
+    background: transparent;
+    border: 1px solid #5f6368;
     color: #e3e3e3;
-    font-size: 20px;
+    padding: 10px;
+    border-radius: 6px;
     cursor: pointer;
-    padding: 5px;
-    border-radius: 3px;
+    margin-left: 10px;
+    transition: transform 0.3s ease;
 }
 
-.sidebar-toggle:hover {
-    background-color: #3c4043;
+.sidebar.collapsed .sidebar-toggle {
+    transform: rotate(180deg);
 }
 
 .sidebar-content {
     flex: 1;
-    padding: 20px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    opacity: 1;
+    transition: opacity 0.2s ease;
 }
 
-.mcp-servers {
-    flex: 1;
+.sidebar.collapsed .sidebar-content {
+    opacity: 0;
+}
+
+.sidebar-title {
+    font-size: 12px;
+    color: #9aa0a6;
+    margin: 20px 0 10px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Collapsible Section */
+.collapsible-section {
     margin-bottom: 20px;
 }
 
-.sidebar-actions {
+.collapsible-header {
+    background: none;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    text-align: left;
+}
+
+.collapsible-header .sidebar-title {
+    margin: 0;
+}
+
+.collapsible-header i {
+    transition: transform 0.3s ease;
+}
+
+.collapsible-content {
+    max-height: 0;
+    overflow-y: auto;
+    transition: max-height 0.3s ease-out;
+    background-color: #2a2b2c;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.collapsible-content.expanded {
+    /* max-height is now set by JS for smooth animation */
+    padding: 15px;
+}
+
+/* MCP Tool Styles */
+.server-group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 0 8px 0;
+    margin-top: 16px;
+    color: #4285f4;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid #3c4043;
+}
+
+.server-group-header:first-child {
+    margin-top: 0;
+}
+
+.server-group-header i {
+    font-size: 12px;
+}
+
+.tool-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #2a2b2c;
+}
+
+.tool-item:last-child {
+    border-bottom: none;
+}
+
+.tool-content {
+    padding-left: 20px;
+}
+
+.tool-name {
+    display: block;
+    font-size: 13px;
+    color: #e3e3e3;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.tool-description {
+    display: block;
+    font-size: 11px;
+    color: #9aa0a6;
+    line-height: 1.3;
+}
+
+.server-list-footer {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #3c4043;
+    display: flex;
+    justify-content: flex-end;
     gap: 10px;
 }
 
-.btn-primary, .btn-secondary {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    flex: 1;
-}
-
-.btn-primary {
-    background-color: #4285f4;
-    color: white;
-}
-
-.btn-primary:hover {
-    background-color: #5a95f5;
-}
-
-.btn-secondary {
-    background-color: #3c4043;
-    color: #e3e3e3;
-}
-
-.btn-secondary:hover {
-    background-color: #545458;
-}
-
-/* Main Content */
+/* Main Content (Gemini Style Chat) */
 .main-content {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
+    position: relative; /* For the open button */
 }
+
+.open-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1500;
+    display: none; /* Hidden by default */
+}
+
+.sidebar.collapsed ~ .main-content .open-btn {
+    display: block; /* Show when sidebar is collapsed */
+}
+
 
 .chat-container {
     width: 100%;
@@ -124,6 +250,7 @@ body {
     padding: 20px;
     border-bottom: 1px solid #3c4043;
     border-radius: 10px 10px 0 0;
+    text-align: center;
 }
 
 .chat-header h2 {
@@ -211,126 +338,229 @@ body {
     background: #555;
 }
 
-/* MCP Server Configuration Styles */
-.server-item {
-    background-color: #2a2b2c;
-    border-radius: 8px;
-    padding: 15px;
+/* MCP Server Configuration Styles - Simplified */
+#server-list-items {
+    max-height: 200px;
+    overflow-y: auto;
     margin-bottom: 15px;
-    border: 1px solid #3c4043;
 }
 
-.server-header {
+.server-item-simple {
+    background-color: #2a2b2c;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #3c4043;
+    transition: background-color 0.2s ease;
+}
+
+.server-item-simple:hover {
+    background-color: #323436;
+}
+
+.server-item-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
+    padding: 12px 15px;
 }
 
-.server-name {
-    font-weight: bold;
-    font-size: 16px;
+.server-name-simple {
+    font-weight: 500;
+    font-size: 14px;
     color: #4285f4;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.server-status {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: bold;
+.btn-delete-simple {
+    background-color: transparent;
+    border: none;
+    color: #ea4335;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.server-status.active {
-    background-color: #34a853;
-    color: white;
-}
-
-.server-status.inactive {
+.btn-delete-simple:hover {
     background-color: #ea4335;
     color: white;
 }
 
-.server-details {
-    margin-top: 10px;
+/* Scrollbar for server list */
+#server-list-items::-webkit-scrollbar {
+    width: 6px;
 }
 
-.server-field {
+#server-list-items::-webkit-scrollbar-track {
+    background: #1e1f20;
+    border-radius: 3px;
+}
+
+#server-list-items::-webkit-scrollbar-thumb {
+    background: #3c4043;
+    border-radius: 3px;
+}
+
+#server-list-items::-webkit-scrollbar-thumb:hover {
+    background: #5f6368;
+}
+
+
+
+/* Modern Button Styles */
+.btn-primary, .btn-secondary {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #34a853 0%, #4ade80 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #4ade80 0%, #5de88a 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(52, 168, 83, 0.3);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #3c4043 0%, #5f6368 100%);
+    color: #e3e3e3;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #5f6368 0%, #6b7075 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(60, 64, 67, 0.3);
+}
+
+.btn-delete {
+    background-color: transparent;
+    color: #ea4335;
+    border: 1px solid #ea4335;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: #ea4335;
+    color: white;
+}
+
+/* Simple JSON Import Section */
+.json-import-simple {
+    background-color: #2a2b2c;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #3c4043;
+}
+
+.import-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #4285f4;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.import-header i {
+    font-size: 14px;
+}
+
+#json-import {
+    width: 100%;
+    background-color: #1e1f20;
+    border: 1px solid #3c4043;
+    border-radius: 6px;
+    padding: 12px;
+    color: #e3e3e3;
+    font-size: 12px;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+    resize: vertical;
+    min-height: 60px;
+    max-height: 120px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
     margin-bottom: 10px;
 }
 
-.server-field label {
-    display: block;
-    font-size: 12px;
-    color: #9aa0a6;
-    margin-bottom: 5px;
-}
-
-.server-field input, .server-field textarea {
-    width: 100%;
-    background-color: #3c4043;
-    border: 1px solid #5f6368;
-    border-radius: 4px;
-    padding: 8px;
-    color: #e3e3e3;
-    font-size: 14px;
-    font-family: 'Google Sans', sans-serif;
-}
-
-.server-field input:focus, .server-field textarea:focus {
+#json-import:focus {
     outline: none;
     border-color: #4285f4;
 }
 
-.server-field textarea {
-    resize: vertical;
-    min-height: 60px;
-    font-family: monospace;
+#json-import::placeholder {
+    color: #9aa0a6;
+    font-style: normal;
 }
 
-.server-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.btn-small {
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.btn-edit {
-    background-color: #fbbc04;
-    color: #202124;
-}
-
-.btn-edit:hover {
-    background-color: #fdd835;
-}
-
-.btn-delete {
-    background-color: #ea4335;
-    color: white;
-}
-
-.btn-delete:hover {
-    background-color: #f87171;
-}
-
-.add-server {
-    background-color: #34a853;
+.btn-import-simple {
+    background-color: #4285f4;
     color: white;
     border: none;
     border-radius: 6px;
-    padding: 12px;
+    padding: 8px 16px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background-color 0.2s ease;
     width: 100%;
-    margin-bottom: 15px;
+    justify-content: center;
 }
 
-.add-server:hover {
-    background-color: #4ade80;
+.btn-import-simple:hover {
+    background-color: #5a95f5;
+}
+
+.btn-import-simple i {
+    font-size: 12px;
+}
+
+/* Server List Section */
+.server-list-section {
+    margin-bottom: 20px;
+}
+
+.list-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    color: #e3e3e3;
+    font-weight: 600;
+    font-size: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #3c4043;
+}
+
+.list-header i {
+    font-size: 16px;
+    color: #4285f4;
 }
