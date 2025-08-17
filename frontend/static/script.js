@@ -204,12 +204,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (importedData.mcpServers && Array.isArray(importedData.mcpServers)) {
                     // New format: wrapped in mcpServers array
                     serversToImport = importedData.mcpServers;
+                } else if (importedData.name && (importedData.url || importedData.command)) {
+                    // Single server object format
+                    serversToImport = [importedData];
                 } else {
                     // Old format: object with server names as keys
-                    serversToImport = Object.entries(importedData).map(([name, config]) => ({
-                        name: name,
-                        ...config
-                    }));
+                    serversToImport = Object.entries(importedData).map(([name, config]) => {
+                        // Ensure config is an object, not a string
+                        if (typeof config === 'object' && config !== null) {
+                            return {
+                                name: name,
+                                ...config
+                            };
+                        } else {
+                            // If config is a string or primitive, treat it as URL
+                            return {
+                                name: name,
+                                url: String(config)
+                            };
+                        }
+                    });
                 }
             } else {
                 throw new Error('JSON must be an array or object');
@@ -253,14 +267,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const saveConfig = async () => {
         try {
-            // No need to collect from form fields anymore, just use currentConfig.mcpServers
+            // Validate and clean the configuration before saving
+            const cleanConfig = {
+                mcpServers: (currentConfig.mcpServers || []).filter(server => {
+                    // Only include valid server configurations
+                    return server && 
+                           typeof server === 'object' && 
+                           server.name && 
+                           typeof server.name === 'string' &&
+                           (server.url || server.command);
+                })
+            };
+
+            console.log('Original currentConfig:', currentConfig);
+            console.log('Saving clean config:', cleanConfig);
+            console.log('Clean config JSON:', JSON.stringify(cleanConfig, null, 2));
 
             const response = await fetch('/api/config', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(currentConfig),
+                body: JSON.stringify(cleanConfig),
             });
 
             const result = await response.json();

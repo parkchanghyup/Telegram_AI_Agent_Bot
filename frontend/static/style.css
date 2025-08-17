@@ -501,8 +501,8 @@ body {
     font-size: 12px;
     font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
     resize: vertical;
-    min-height: 60px;
-    max-height: 120px;
+    min-height: 120px;
+    max-height: 150px;
     box-sizing: border-box;
     transition: border-color 0.2s ease;
     margin-bottom: 10px;
