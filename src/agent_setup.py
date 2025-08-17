@@ -1,45 +1,47 @@
 import logging
-import json
 import os
 from agents.mcp import MCPServerStreamableHttp, MCPServerStdio
 from agents.agent import Agent
 from .llm_factory import LLMFactory
 from .utils import load_prompt
+from .config import (
+    PROJECT_ROOT,
+    PROMPT_DIR,
+    load_llm_config,
+    load_mcp_config
+)
 
 async def setup_agent_and_servers():
     """MCP 서버와 AI 에이전트를 설정합니다."""
     mcp_servers = []
-
-    # 프로젝트 루트 경로 설정
-    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     
     # LLM 설정 로드
-    llm_config_path = os.path.join(project_root, 'llm_config.json')
-    try:
-        with open(llm_config_path, 'r', encoding='utf-8') as f:
-            llm_config = json.load(f)
-    except FileNotFoundError:
-        logging.error(f"{llm_config_path} 파일을 찾을 수 없습니다.")
+    llm_config = load_llm_config()
+    if not llm_config:
         return None, []
     
     # LLMFactory 인스턴스 생성
     llm_factory = LLMFactory(llm_config)
     
-    # mcp_config.json 파일 경로를 프로젝트 루트 기준으로 설정
-    mcp_config_path = os.path.join(project_root, 'mcp_config.json')
+    # MCP 설정 로드
+    config = load_mcp_config()
 
-    try:
-        with open(mcp_config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-    except FileNotFoundError:
-        logging.warning(f"{mcp_config_path} 파일을 찾을 수 없어 MCP 서버 없이 실행합니다.")
-        config = {}
-
-    for server_name, server_config in config.get('mcpServers', {}).items():
+    for server_config in config.get('mcpServers', []):
+        server_name = server_config.get('name')
+        if not server_name:
+            logging.warning("MCP 서버 설정에 'name' 필드가 없습니다. 건너뜁니다.")
+            continue
+            
         if "url" in server_config:
             logging.info(f"MCP 서버 준비: name={server_name}, url={server_config['url']}")
+            
+            # 헤더 설정 (인증 등)
+            params = {"url": server_config["url"]}
+            if "headers" in server_config:
+                params["headers"] = server_config["headers"]
+            
             server = MCPServerStreamableHttp(
-                params={"url": server_config["url"]},
+                params=params,
                 cache_tools_list=True
             )
         else:
@@ -50,24 +52,29 @@ async def setup_agent_and_servers():
             for i, arg in enumerate(args):
                 # 'src/'로 시작하는 경로를 프로젝트 루트 기준으로 변경
                 if arg.startswith('src/'):
-                    args[i] = os.path.join(project_root, arg)
+                    args[i] = os.path.join(PROJECT_ROOT, arg)
 
             server = MCPServerStdio(
                 params={
                     "command": server_config.get("command"),
                     "args": args,
-                    "cwd": project_root # 작업 디렉토리를 프로젝트 루트로 설정
+                    "cwd": PROJECT_ROOT, # 작업 디렉토리를 프로젝트 루트로 설정
+                    "env": os.environ, # 현재 환경 변수를 자식 프로세스에 전달
+                    "shell": True # 셸을 통해 명령 실행
                 },
                 cache_tools_list=True
             )
         
-        await server.connect()
-        logging.info(f"MCP 서버 연결 성공: name={server_name}")
-        mcp_servers.append(server)
+        try:
+            await server.connect()
+            logging.info(f"MCP 서버 연결 성공: name={server_name}")
+            mcp_servers.append(server)
+        except Exception as e:
+            logging.error(f"MCP 서버 연결 실패: name={server_name}, error={str(e)}")
+            logging.info(f"MCP 서버 '{server_name}' 없이 계속 진행합니다.")
 
     # Load the universal prompt from file
-    prompt_base_dir = os.path.join(os.path.dirname(__file__), "prompt")
-    INSTRUCTIONS = load_prompt("prompt.txt", prompt_base_dir)
+    INSTRUCTIONS = load_prompt("prompt.txt", PROMPT_DIR)
 
     # Create single main agent with all MCP servers and a versatile model
     main_agent = Agent(

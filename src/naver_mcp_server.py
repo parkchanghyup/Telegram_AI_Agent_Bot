@@ -5,60 +5,61 @@ import logging
 from typing import List, Dict
 import requests
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-load_dotenv()
+from src.config import (
+    NAVER_CLIENT_ID,
+    NAVER_CLIENT_SECRET,
+    NAVER_NEWS_API_URL,
+    NAVER_NEWS_DEFAULT_COUNT,
+    ARTICLE_FETCH_TIMEOUT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_USER_AGENT,
+    LOGS_DIR,
+    LOG_FORMAT,
+    LOG_ENCODING,
+    DEFAULT_LOG_LEVEL,
+    ARTICLE_SELECTORS,
+    UNWANTED_HTML_TAGS,
+    validate_naver_config
+)
 
 # Configure file-based logging for the MCP server
-os.makedirs('logs', exist_ok=True)
 logger = logging.getLogger("naver_mcp_server")
 if not logger.handlers:
-    logger.setLevel(logging.INFO)
-    fh = logging.FileHandler('logs/naver_mcp_server.log', encoding='utf-8')
-    fh.setLevel(logging.INFO)
-    fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.setLevel(DEFAULT_LOG_LEVEL)
+    fh = logging.FileHandler(
+        os.path.join(LOGS_DIR, 'naver_mcp_server.log'), 
+        encoding=LOG_ENCODING
+    )
+    fh.setLevel(DEFAULT_LOG_LEVEL)
+    fh.setFormatter(logging.Formatter(LOG_FORMAT))
     logger.addHandler(fh)
 
 mcp = FastMCP("naver_search_server")
 
-NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
-NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
-BASE_URL = "https://openapi.naver.com/v1/search/news.json"
-
 def _fetch_article_content(url: str) -> str:
     """뉴스 URL에 접속하여 본문 내용을 가져옵니다."""
     try:
-        response = requests.get(url, timeout=10, headers={'User-Agent': 'Mozilla/5.0'})
+        response = requests.get(
+            url, 
+            timeout=ARTICLE_FETCH_TIMEOUT, 
+            headers={'User-Agent': DEFAULT_USER_AGENT}
+        )
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # 다양한 뉴스 플랫폼에 대응하기 위한 선택자 리스트
-        selectors = [
-            'article#dic_area',                 # 네이버 뉴스
-            'div#newsct_article',               # 네이버 뉴스
-            'div.article_body',                 # 일반적인 클래스
-            'div#article_body',                 # ID 형식
-            'div#articleBodyContents',          # 연합뉴스 등
-            'div.article_view',                 # 여러 언론사
-            'div.article-view-content-wrapper', # ITWorld
-            'div#content',                      # 일반적인 ID
-            'div.entry-content',                # 블로그/워드프레스 기반 사이트
-            'div.post-content',                 # 블로그/워드프레스 기반 사이트
-            'div#main-content',                 # 일반적인 ID
-            'article',                          # 시맨틱 태그
-            'main'                              # 시맨틱 태그
-        ]
-
         article_body = None
-        for selector in selectors:
+        for selector in ARTICLE_SELECTORS:
             article_body = soup.select_one(selector)
             if article_body:
                 break
 
         if article_body:
-            # 본문 내용에서 불필요한 태그(스크립트, 스타일, 광고 등) 제거
-            for tag in article_body.find_all(['script', 'style', 'iframe', 'aside', 'footer', 'header', 'nav']):
+            # 본문 내용에서 불필요한 태그 제거
+            for tag in article_body.find_all(UNWANTED_HTML_TAGS):
                 tag.decompose()
             
             # 텍스트 추출
@@ -72,21 +73,29 @@ def _fetch_article_content(url: str) -> str:
 @mcp.tool()
 def search_naver_news(query: str) -> List[Dict]:
     """네이버에서 특정 키워드로 뉴스를 검색하고, 각 기사의 본문을 추출합니다."""
-    display_count = 5  # 가져올 뉴스 기사 수를 5개로 고정
-    if not NAVER_CLIENT_ID or not NAVER_CLIENT_SECRET:
-        raise ValueError("환경변수 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET가 설정되지 않았습니다.")
+    # Naver API 설정 검증
+    validate_naver_config()
 
     headers = {
         "X-Naver-Client-Id": NAVER_CLIENT_ID,
         "X-Naver-Client-Secret": NAVER_CLIENT_SECRET
     }
-    params = {"query": query, "display": display_count, "sort": "date"}
+    params = {
+        "query": query, 
+        "display": NAVER_NEWS_DEFAULT_COUNT, 
+        "sort": "date"
+    }
 
     # --- 1. Naver API 호출 시간 측정 ---
     api_start_time = time.perf_counter()
-    logger.info("Naver API 호출 시작: query='%s', display=%d", query, display_count)
+    logger.info("Naver API 호출 시작: query='%s', display=%d", query, NAVER_NEWS_DEFAULT_COUNT)
     try:
-        response = requests.get(BASE_URL, headers=headers, params=params, timeout=15)
+        response = requests.get(
+            NAVER_NEWS_API_URL, 
+            headers=headers, 
+            params=params, 
+            timeout=DEFAULT_TIMEOUT
+        )
         response.raise_for_status()
         news_items = response.json().get("items", [])
         logger.info("Naver API 응답 (처음 3개): %s", news_items[:3])  # 응답 로깅
@@ -123,8 +132,19 @@ def search_naver_news(query: str) -> List[Dict]:
     return results
 
 if __name__ == "__main__":
-    if not NAVER_CLIENT_ID or not NAVER_CLIENT_SECRET:
-        print("환경변수 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET를 .env 파일에 설정해주세요.")
-    else:
+    import sys
+    try:
+        validate_naver_config()
         print("Naver 뉴스 검색 MCP 서버를 시작합니다...")
-        mcp.run()
+        
+        # Check if we should run as HTTP server
+        if len(sys.argv) > 1 and sys.argv[1] == "--http":
+            port = int(sys.argv[2]) if len(sys.argv) > 2 else 8001
+            print(f"HTTP 모드로 서버 시작 (포트: {port})")
+            mcp.run(transport="http", port=port)
+        else:
+            print("stdio 모드로 서버 시작")
+            mcp.run()
+    except ValueError as e:
+        print(f"설정 오류: {e}")
+        print("환경변수 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET를 .env 파일에 설정해주세요.")
