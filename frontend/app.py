@@ -3,10 +3,50 @@ import sys
 import asyncio
 import json
 import logging
+import threading
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
-load_dotenv()
+class MCPErrorFilter(logging.Filter):
+    """MCP 관련 무해한 에러들을 필터링하는 클래스"""
+    
+    def filter(self, record):
+        # 억제할 에러 메시지 패턴들
+        suppress_patterns = [
+            "SSE stream disconnected",
+            "Failed to open SSE stream", 
+            "Transport is closed",
+            "Failed to send heartbeat",
+            "Streamable HTTP error",
+            "Maximum reconnection attempts",
+            "Session termination failed",
+            "Error POSTing to endpoint",
+            "Failed to reconnect SSE stream"
+        ]
+        
+        # 중요한 설정 로그는 억제하지 않음
+        important_patterns = [
+            "MCP 클라이언트 타임아웃 설정",
+            "MCP 서버 연결 성공", 
+            "MCP 서버 연결 실패"
+        ]
+        
+        # 중요한 메시지는 통과시킴
+        for pattern in important_patterns:
+            if pattern in record.getMessage():
+                return True
+        
+        # 메시지에 억제 패턴이 포함되어 있으면 False 반환 (로그 출력 안함)
+        for pattern in suppress_patterns:
+            if pattern in record.getMessage():
+                return False
+        
+        return True
+
+# Load .env from parent directory (telegram_mcp_bot/)
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+env_path = os.path.join(parent_dir, '.env')
+load_dotenv(env_path)
 
 # Set environment variables for OpenAI (if not already set)
 if not os.getenv("OPENAI_API_KEY"):
@@ -40,7 +80,16 @@ app = Flask(__name__)
 main_agent = None
 mcp_servers = []
 agent_ready = False
-global_loop = None  # 글로벌 이벤트 루프 저장
+#  dedicated asyncio event loop running in a background thread
+background_loop = None
+background_thread = None
+
+
+def start_background_loop(loop):
+    """Starts the asyncio event loop in a background thread."""
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
 
 async def initialize_agent():
     """Initialize the MCP agent and servers."""
@@ -93,7 +142,6 @@ def index():
 def chat():
     """Handle chat messages from the frontend."""
     try:
-        # Validate request
         if not request.json:
             return jsonify({'response': "❌ Invalid request format. Please send JSON data."}), 400
             
@@ -103,126 +151,37 @@ def chat():
         if not user_message:
             return jsonify({'response': "❌ Please enter a message."}), 400
         
-        if not agent_ready:
+        if not agent_ready or not main_agent or not background_loop:
             return jsonify({
-                'response': "⚠️ Agent is not ready yet. Please wait for initialization to complete or try reinitializing."
-            }), 503
-        
-        if not main_agent:
-            return jsonify({
-                'response': "❌ Agent instance is not available. Please try reinitializing the agent."
+                'response': "⚠️ Agent is not ready. Please wait or reinitialize."
             }), 503
         
         print(f"📨 Received chat message: {user_message[:100]}...")
-        
-        # 🔧 MCP 서버를 포함한 완전한 Agent를 chat에서 새로 생성
-        print(f"🔍 MCP 서버 포함 완전한 Agent 생성...")
-        
+
+        async def run_agent_async(agent, message):
+            """Coroutine to run the agent."""
+            return await Runner.run(agent, input=message)
+
         try:
-            print(f"🔍 MCP Agent 생성 시작...")
+            # Submit the agent run to the background event loop and wait for the result
+            future = asyncio.run_coroutine_threadsafe(
+                run_agent_async(main_agent, user_message), 
+                background_loop
+            )
             
-            # chat endpoint에서 MCP 서버를 새로 연결하여 이벤트 루프 문제 해결
-            async def create_fresh_agent():
-                from agents.agent import Agent
-                from src.llm_factory import LLMFactory
-                from src.config import load_llm_config, load_mcp_config
-                from src.utils import load_prompt
-                from src.config import PROMPT_DIR
-                from agents.mcp import MCPServerStdio, MCPServerStreamableHttp
-                import os
-                
-                # LLM 설정
-                llm_config = load_llm_config()
-                llm_factory = LLMFactory(llm_config)
-                
-                # MCP 서버 새로 연결
-                fresh_mcp_servers = []
-                config = load_mcp_config()
-                
-                for server_config in config.get('mcpServers', []):
-                    server_name = server_config.get('name')
-                    if not server_name:
-                        print("⚠️ MCP 서버 설정에 'name' 필드가 없습니다. 건너뜁니다.")
-                        continue
-                    
-                    print(f"🔍 MCP 서버 연결 중: {server_name}")
-                    
-                    if "url" in server_config:
-                        # 헤더 설정 (인증 등)
-                        params = {"url": server_config["url"]}
-                        if "headers" in server_config:
-                            params["headers"] = server_config["headers"]
-                        
-                        server = MCPServerStreamableHttp(
-                            params=params,
-                            cache_tools_list=True
-                        )
-                    else:
-                        from src.config import PROJECT_ROOT
-                        args = server_config.get("args", [])
-                        for i, arg in enumerate(args):
-                            if arg.startswith('src/'):
-                                args[i] = os.path.join(PROJECT_ROOT, arg)
-                        
-                        server = MCPServerStdio(
-                            params={
-                                "command": server_config.get("command"),
-                                "args": args,
-                                "cwd": PROJECT_ROOT,
-                                "env": os.environ,
-                                "shell": True
-                            },
-                            cache_tools_list=True
-                        )
-                    
-                    try:
-                        await server.connect()
-                        fresh_mcp_servers.append(server)
-                        print(f"✅ MCP 서버 연결 완료: {server_name}")
-                    except Exception as e:
-                        print(f"❌ MCP 서버 연결 실패: {server_name}, error={str(e)}")
-                        print(f"   MCP 서버 '{server_name}' 없이 계속 진행합니다.")
-                
-                # 프롬프트 로드
-                instructions = load_prompt("prompt.txt", PROMPT_DIR)
-                
-                # 완전한 Agent 생성
-                fresh_agent = Agent(
-                    name="Fresh MCP Agent",
-                    instructions=instructions,
-                    model=llm_factory.get_model(),
-                    mcp_servers=fresh_mcp_servers
-                )
-                
-                print(f"✅ 완전한 MCP Agent 생성 완료!")
-                
-                # Runner.run 실행
-                print(f"🔍 Runner.run 실행 시작...")
-                result = await Runner.run(fresh_agent, input=user_message)
-                print(f"✅ Runner.run 완료!")
-                
-                # MCP 서버 연결 정리
-                for server in fresh_mcp_servers:
-                    try:
-                        await server.disconnect()
-                    except:
-                        pass
-                
-                return str(result.final_output)
-            
-            # 새로운 이벤트 루프에서 실행
-            response_text = asyncio.run(create_fresh_agent())
-            
-            print(f"✅ 완전한 MCP Agent 성공! response: {response_text[:100]}...")
-            print(f"📤 Sending response: {response_text[:100]}...")
+            # Set a timeout for the agent's response
+            result = future.result(timeout=180) # 3-minute timeout
+            response_text = str(result.final_output)
+
+            print(f"✅ Agent run successful! response: {response_text[:100]}...")
             return jsonify({'response': response_text})
             
         except Exception as run_error:
-            print(f"❌ MCP Agent 실패: {run_error}")
+            print(f"❌ Agent run error: {run_error}")
             import traceback
             traceback.print_exc()
             return jsonify({
-                'response': f"🔧 MCP Agent 실행 실패: {str(run_error)}"
+                'response': f"🔧 Agent execution failed: {str(run_error)}"
             }), 500
         
     except Exception as e:
@@ -232,6 +191,7 @@ def chat():
         return jsonify({
             'response': f"❌ Server error: {str(e)}"
         }), 500
+
 
 @app.route('/api/config', methods=['GET'])
 def get_config():
@@ -269,6 +229,7 @@ def _suppress_async_shutdown_error_handler(loop, context):
     during the shutdown of the asyncio event loop in a threaded environment.
     """
     exception = context.get("exception")
+    message = context.get("message", "")
     
     # Check for the specific RuntimeError from anyio/mcp-sdk
     is_cancel_scope_error = (
@@ -280,7 +241,56 @@ def _suppress_async_shutdown_error_handler(loop, context):
     is_generator_exit = isinstance(exception, GeneratorExit)
     is_cancelled_error = isinstance(exception, asyncio.CancelledError)
 
-    if is_cancel_scope_error or is_generator_exit or is_cancelled_error:
+    # Check for additional MCP-related errors to suppress
+    is_transport_closed = (
+        isinstance(exception, Exception)
+        and ("Transport is closed" in str(exception) or "Session termination failed" in str(exception))
+    )
+    
+    # Check for task group errors safely (BaseExceptionGroup is Python 3.11+)
+    is_task_group_error = False
+    try:
+        # BaseExceptionGroup is a builtin in Python 3.11+
+        import builtins
+        BaseExceptionGroup = getattr(builtins, 'BaseExceptionGroup', None)
+        if BaseExceptionGroup and isinstance(exception, BaseExceptionGroup):
+            is_task_group_error = "unhandled errors in a TaskGroup" in str(exception)
+        else:
+            is_task_group_error = "unhandled errors in a TaskGroup" in str(exception)
+    except Exception:
+        # Fallback: check string representation
+        is_task_group_error = "unhandled errors in a TaskGroup" in str(exception)
+    
+    # Check for MCP/anyio related errors by exception type and message patterns
+    is_anyio_error = (
+        isinstance(exception, RuntimeError)
+        and any(pattern in str(exception) for pattern in [
+            "anyio", "cancel scope", "task group", "GeneratorExit"
+        ])
+    )
+    
+    # Check for task-related shutdown errors
+    is_task_shutdown_error = (
+        "Task exception was never retrieved" in message
+        or "Task was destroyed but it is pending" in message
+        or isinstance(exception, (asyncio.CancelledError, GeneratorExit))
+    )
+    
+    # Check for Streamable HTTP/MCP connection errors
+    is_streamable_http_error = (
+        "SSE stream disconnected" in message
+        or "Failed to open SSE stream" in message
+        or "Transport is closed" in message
+        or "Failed to send heartbeat" in message
+        or "Streamable HTTP error" in message
+        or "Maximum reconnection attempts" in message
+        or "Session termination failed" in message
+    )
+    
+    # Suppress all known benign errors
+    if (is_cancel_scope_error or is_generator_exit or is_cancelled_error or 
+        is_transport_closed or is_task_group_error or is_anyio_error or 
+        is_task_shutdown_error or is_streamable_http_error):
         # Suppress the error by doing nothing
         pass
     else:
@@ -289,97 +299,36 @@ def _suppress_async_shutdown_error_handler(loop, context):
 
 @app.route('/api/tools', methods=['GET'])
 def get_tools():
-    """Get list of available MCP tools."""
-    from src.config import load_mcp_config
+    """Get list of available MCP tools from the globally managed servers."""
+    if not agent_ready or not mcp_servers or not background_loop:
+        return jsonify({'error': 'Agent or event loop not ready.'}), 503
+
+    tools_by_server = {}
+    server_names = [s.get('name') for s in config.get('mcpServers', [])]
     
-    async def get_tools_from_server(server_config):
-        """Helper to connect to a single server and fetch tools."""
-        from agents.mcp import MCPServerStdio, MCPServerStreamableHttp
-        from src.config import PROJECT_ROOT
-        import os
-
-        server_name = server_config.get('name')
-        if not server_name:
-            return None
-
-        server = None
-        tool_list = []
+    for i, server in enumerate(mcp_servers):
+        server_name = server_names[i] if i < len(server_names) else f"Server-{i+1}"
         try:
-            print(f"🔍 Concurrently connecting to MCP server: {server_name}")
-            if "url" in server_config:
-                params = {"url": server_config["url"]}
-                if "headers" in server_config:
-                    params["headers"] = server_config["headers"]
-                server = MCPServerStreamableHttp(params=params, cache_tools_list=True)
-            else:
-                args = server_config.get("args", [])
-                for i, arg in enumerate(args):
-                    if arg.startswith('src/'):
-                        args[i] = os.path.join(PROJECT_ROOT, arg)
-                server = MCPServerStdio(
-                    params={
-                        "command": server_config.get("command"), "args": args, "cwd": PROJECT_ROOT,
-                        "env": os.environ, "shell": True
-                    },
-                    cache_tools_list=True
-                )
+            # Submit the async list_tools call to the running background loop
+            future = asyncio.run_coroutine_threadsafe(server.list_tools(), background_loop)
             
-            await server.connect()
-            tools = await server.list_tools()
-            
+            # Wait for the result with a timeout
+            tools = future.result(timeout=30) # 30-second timeout
+
             if tools:
                 tool_list = [
                     {"name": tool.name, "description": getattr(tool, 'description', 'No description available')}
                     for tool in tools
                 ]
-                print(f"✅ Found {len(tool_list)} tools in {server_name}")
+                tools_by_server[server_name] = tool_list
             else:
-                 tool_list = [{"name": "No tools", "description": "Server connected but no tools available"}]
-            
-            return (server_name, tool_list)
-
+                tools_by_server[server_name] = [{"name": "No tools", "description": "No tools available"}]
+        
         except Exception as e:
             print(f"❌ Error getting tools from {server_name}: {e}")
-            logging.error(f'Tool fetch failed for {server_name}: {e}', exc_info=True)
-            error_info = [{"name": "Error", "description": f"Failed to get tools: {str(e)}"}]
-            return (server_name, error_info)
-
-    async def fetch_all_tools_concurrently():
-        """Gathers tools from all configured servers concurrently."""
-        config = load_mcp_config()
-        mcp_servers_config = config.get('mcpServers', [])
-        
-        tasks = [get_tools_from_server(conf) for conf in mcp_servers_config]
-        results = await asyncio.gather(*tasks)
-        
-        final_tools = {}
-        for result in results:
-            if result:
-                server_name, tool_list = result
-                final_tools[server_name] = tool_list
-        return final_tools
-
-    loop = None
-    try:
-        # Manually create and manage the event loop to set a custom exception handler
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        # Set the custom handler to suppress specific shutdown errors
-        loop.set_exception_handler(_suppress_async_shutdown_error_handler)
-        
-        # Run the entire concurrent operation
-        tools_data = loop.run_until_complete(fetch_all_tools_concurrently())
-        
-        return jsonify(tools_data)
-        
-    except Exception as e:
-        print(f"Error in get_tools endpoint: {e}")
-        return jsonify({'error': str(e)}), 500
-    finally:
-        if loop:
-            # Ensure the loop is closed to prevent resource leaks
-            loop.close()
+            tools_by_server[server_name] = [{"name": "Error", "description": str(e)}]
+            
+    return jsonify(tools_by_server)
 
 
 @app.route('/api/status', methods=['GET'])
@@ -393,28 +342,59 @@ def get_status():
 @app.route('/api/init', methods=['POST'])
 def init_agent():
     """Initialize or reinitialize the agent."""
+    global background_loop
+    if not background_loop or not background_loop.is_running():
+        return jsonify({'error': 'Background event loop is not running.'}), 503
+
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            success = loop.run_until_complete(initialize_agent())
-            return jsonify({'success': success})
-        finally:
-            loop.close()
+        # Submit the initialization to the background event loop
+        future = asyncio.run_coroutine_threadsafe(initialize_agent(), background_loop)
+        
+        # Wait for the result with a timeout
+        success = future.result(timeout=60) # 60-second timeout for initialization
+        
+        return jsonify({'success': success})
     except Exception as e:
+        print(f"❌ Error during re-initialization: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     print("🤖 Starting MCP Agent Web Interface...")
+
+    # MCP 설정은 기본값 사용
+
+    # MCP 에러 필터 적용 - 루트 로거와 관련 로거들에 필터 추가
+    mcp_filter = MCPErrorFilter()
+    logging.getLogger().addFilter(mcp_filter)
+    logging.getLogger("agents").addFilter(mcp_filter)
+    logging.getLogger("openai.agents").addFilter(mcp_filter)
+    logging.getLogger("mcp").addFilter(mcp_filter)
+
+    # Set up and start the background event loop
+    background_loop = asyncio.new_event_loop()
     
-    # Initialize agent on startup
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(initialize_agent())
+    # Set custom exception handler to suppress benign MCP shutdown errors
+    background_loop.set_exception_handler(_suppress_async_shutdown_error_handler)
     
-    print("🌐 Starting web server...")
-    print("📱 Open http://127.0.0.1:5001 in your browser")
+    background_thread = threading.Thread(target=start_background_loop, args=(background_loop,), daemon=True)
+    background_thread.start()
     
+    # Initialize agent on startup within the background loop
+    init_future = asyncio.run_coroutine_threadsafe(initialize_agent(), background_loop)
     try:
+        # Wait for initialization to complete
+        init_future.result(timeout=60)
+    except Exception as e:
+        print(f"❌ Agent initialization failed: {e}")
+
+    print("🌐 Starting web server...")
+    print("📱 Open http://1227.0.0.1:5001 in your browser")
+
+    try:
+        # Note: We are now importing threading
         app.run(
             host='127.0.0.1',
             port=5001,
@@ -424,15 +404,7 @@ if __name__ == '__main__':
         )
     except KeyboardInterrupt:
         print("\n👋 Shutting down gracefully...")
-        # Cleanup
-        if mcp_servers:
-            async def cleanup():
-                for server in mcp_servers:
-                    try:
-                        await server.disconnect()
-                    except:
-                        pass
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(cleanup())
-    except Exception as e:
-        print(f"❌ Server error: {e}")
+    finally:
+        if background_loop:
+            background_loop.call_soon_threadsafe(background_loop.stop)
+            # background_thread.join() # This can hang, stopping is enough for daemon
