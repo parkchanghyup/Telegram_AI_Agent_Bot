@@ -92,39 +92,70 @@ document.addEventListener('DOMContentLoaded', () => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', senderClass);
         
-        // Convert markdown to HTML for bot messages, keep plain text for user messages
-        if (senderClass === 'bot-message' && window.marked) {
-            try {
-                // Configure marked for security and better rendering
-                const renderer = new marked.Renderer();
-                
-                // Custom link renderer to open in new tab and add security
-                renderer.link = function(href, title, text) {
-                    return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-                };
-                
-                marked.setOptions({
-                    renderer: renderer,
-                    breaks: true,
-                    gfm: true,
-                    sanitize: false,
-                    smartLists: true,
-                    smartypants: false
-                });
-                
-                messageElement.innerHTML = marked.parse(text);
-                
-                // Apply syntax highlighting to code blocks
-                if (window.hljs) {
-                    messageElement.querySelectorAll('pre code').forEach((block) => {
-                        hljs.highlightElement(block);
+        // For bot messages, create proper structure with emoji and content wrapper
+        if (senderClass === 'bot-message') {
+            // Create emoji element
+            const emojiElement = document.createElement('div');
+            emojiElement.classList.add('bot-message-emoji');
+            emojiElement.textContent = '🤖';
+            
+            // Create wrapper for content and copy button
+            const messageWrapper = document.createElement('div');
+            messageWrapper.classList.add('bot-message-wrapper');
+            
+            // Create content wrapper
+            const contentWrapper = document.createElement('div');
+            contentWrapper.classList.add('bot-message-content');
+            
+            // Convert markdown to HTML for bot messages
+            if (window.marked) {
+                try {
+                    // Configure marked for security and better rendering
+                    const renderer = new marked.Renderer();
+                    
+                    // Custom link renderer to open in new tab and add security
+                    renderer.link = function(href, title, text) {
+                        return `<a href="${href}" title="${title || ''}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+                    };
+                    
+                    marked.setOptions({
+                        renderer: renderer,
+                        breaks: true,
+                        gfm: true,
+                        sanitize: false,
+                        smartLists: true,
+                        smartypants: false
                     });
+                    
+                    contentWrapper.innerHTML = marked.parse(text);
+                    
+                    // Apply syntax highlighting to code blocks
+                    if (window.hljs) {
+                        contentWrapper.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Markdown parsing error:', error);
+                    contentWrapper.textContent = text; // Fallback to plain text
                 }
-            } catch (error) {
-                console.error('Markdown parsing error:', error);
-                messageElement.textContent = text; // Fallback to plain text
+            } else {
+                contentWrapper.textContent = text;
             }
+            
+            // Add copy button
+            const copyButton = document.createElement('button');
+            copyButton.classList.add('copy-btn');
+            copyButton.innerHTML = '<i class="fas fa-copy"></i>Copy';
+            copyButton.onclick = () => copyToClipboard(text, copyButton);
+            
+            // Assemble the structure
+            messageWrapper.appendChild(contentWrapper);
+            messageWrapper.appendChild(copyButton);
+            messageElement.appendChild(emojiElement);
+            messageElement.appendChild(messageWrapper);
         } else {
+            // For user messages, just set text content
             messageElement.textContent = text;
         }
         
@@ -133,6 +164,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
+    };
+    
+    // Copy to clipboard function
+    const copyToClipboard = async (text, buttonElement) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            
+            // Update button to show success
+            const originalHTML = buttonElement.innerHTML;
+            buttonElement.innerHTML = '<i class="fas fa-check"></i>Copied!';
+            buttonElement.classList.add('copied');
+            
+            // Reset button after 2 seconds
+            setTimeout(() => {
+                buttonElement.innerHTML = originalHTML;
+                buttonElement.classList.remove('copied');
+            }, 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+            
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                
+                // Update button to show success
+                const originalHTML = buttonElement.innerHTML;
+                buttonElement.innerHTML = '<i class="fas fa-check"></i>Copied!';
+                buttonElement.classList.add('copied');
+                
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalHTML;
+                    buttonElement.classList.remove('copied');
+                }, 2000);
+            } catch (fallbackErr) {
+                console.error('Fallback copy failed: ', fallbackErr);
+            }
+            document.body.removeChild(textArea);
+        }
     };
 
     // Sidebar functionality

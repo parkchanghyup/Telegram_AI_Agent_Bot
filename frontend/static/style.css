@@ -105,7 +105,7 @@ body {
 }
 
 .sidebar-title {
-    font-size: 12px;
+    font-size: 14px;
     color: #9aa0a6;
     margin: 20px 0 10px;
     text-transform: uppercase;
@@ -205,14 +205,15 @@ body {
 
 
 
-/* Main Content (Gemini Style Chat) */
+/* Main Content (Simple & Clean) */
 .main-content {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
-    position: relative; /* For the open button */
+    position: relative;
+    background: #131314;
 }
 
 .open-btn {
@@ -230,53 +231,108 @@ body {
 
 .chat-container {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
     height: 90vh;
-    background-color: #1e1f20;
-    border-radius: 10px;
+    background: transparent;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .chat-header {
-    background-color: #1e1f20;
-    padding: 20px;
-    border-bottom: 1px solid #3c4043;
-    border-radius: 10px 10px 0 0;
+    padding: 24px 0;
     text-align: center;
 }
 
 .chat-header h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 22px;
+    font-weight: 400;
+    color: #e3e3e3;
 }
 
 .chat-box {
     flex-grow: 1;
-    padding: 20px;
+    padding: 20px 0;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    scroll-behavior: smooth;
 }
 
 .chat-box .message {
-    margin-bottom: 15px;
-    padding: 10px 15px;
-    border-radius: 20px;
-    max-width: 70%;
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    border-radius: 18px;
+    max-width: 80%;
     line-height: 1.5;
+    word-wrap: break-word;
 }
 
 .chat-box .user-message {
-    background-color: #3c4043;
+    background-color: #2d2d30;
+    color: #e3e3e3;
     align-self: flex-end;
+    margin-left: auto;
 }
 
 .chat-box .bot-message {
-    background-color: #4285f4;
-    color: white;
+    background-color: transparent;
+    color: #e3e3e3;
     align-self: flex-start;
+    margin-right: auto;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.bot-message-emoji {
+    font-size: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.bot-message-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.bot-message-content {
+    flex: 1;
+}
+
+.copy-btn {
+    background: #2d2d30;
+    border: 1px solid #3c4043;
+    color: #9aa0a6;
+    padding: 6px 12px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 11px;
+    opacity: 0;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    align-self: flex-start;
+    white-space: nowrap;
+}
+
+.bot-message:hover .copy-btn {
+    opacity: 1;
+}
+
+.copy-btn:hover {
+    background: #3c4043;
+    color: #e3e3e3;
+}
+
+.copy-btn.copied {
+    background: #34a853;
+    color: white;
+    border-color: #34a853;
 }
 
 /* Markdown styling within bot messages */
@@ -313,12 +369,12 @@ body {
 }
 
 .bot-message pre {
-    background-color: #282c34 !important; /* atom-one-dark background */
-    padding: 12px;
+    background: #1e1f20 !important;
+    padding: 16px;
     border-radius: 8px;
     overflow-x: auto;
-    margin: 10px 0;
-    border-left: 4px solid #61dafb;
+    margin: 12px 0;
+    border-left: 3px solid #4285f4;
 }
 
 .bot-message pre code {
@@ -326,12 +382,13 @@ body {
     padding: 0;
     font-size: 0.85em;
     line-height: 1.4;
-    color: #abb2bf; /* atom-one-dark text color */
+    color: #e3e3e3;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
 }
 
 /* Override highlight.js styles to fit our theme */
 .bot-message pre code.hljs {
-    background: #282c34 !important;
+    background: none !important;
     padding: 0;
 }
 
@@ -387,46 +444,68 @@ body {
 
 .chat-input {
     display: flex;
-    padding: 20px;
-    border-top: 1px solid #3c4043;
+    padding: 20px 0 24px;
+    gap: 12px;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 90%;
 }
 
 #user-input {
     flex-grow: 1;
-    background-color: #3c4043;
-    border: none;
-    padding: 15px;
-    border-radius: 25px;
+    background: #2d2d30;
+    border: 1px solid #3c4043;
+    padding: 14px 16px;
+    border-radius: 24px;
     color: #e3e3e3;
     font-size: 16px;
+    line-height: 1.5;
+    resize: none;
+    min-height: 20px;
+    max-height: 120px;
+    overflow-y: auto;
+    transition: border-color 0.2s ease;
 }
 
 #user-input:focus {
     outline: none;
+    border-color: #4285f4;
+}
+
+#user-input::placeholder {
+    color: #9aa0a6;
 }
 
 #send-btn {
-    background-color: #4285f4;
+    background: #4285f4;
     color: white;
     border: none;
-    padding: 15px 20px;
-    border-radius: 25px;
-    margin-left: 10px;
+    padding: 14px 20px;
+    border-radius: 24px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    min-width: 70px;
 }
 
 #send-btn:hover {
-    background-color: #5a95f5;
+    background: #5a95f5;
 }
 
-/* Scrollbar styling */
+#send-btn:disabled {
+    background: #3c4043;
+    cursor: not-allowed;
+}
+
+/* Simple Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: #1e1f20;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -435,7 +514,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #555;
+    background: #5f6368;
 }
 
 /* MCP Server Configuration Styles - Simplified */
