@@ -2,6 +2,7 @@ import os
 import sys
 import asyncio
 import json
+import logging
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 
@@ -62,7 +63,7 @@ async def initialize_agent():
         print(f"🔍 PROJECT_ROOT exists: {os.path.exists(PROJECT_ROOT)}")
         print(f"🔍 src directory exists: {os.path.exists(os.path.join(PROJECT_ROOT, 'src'))}")
         
-        main_agent, mcp_servers = await setup_agent_and_servers()
+        main_agent, mcp_servers, server_names = await setup_agent_and_servers()
         if main_agent and mcp_servers:
             agent_ready = True
             print(f"✅ MCP agent initialized successfully with {len(mcp_servers)} servers!")
@@ -262,124 +263,124 @@ def save_config():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+def _suppress_async_shutdown_error_handler(loop, context):
+    """
+    Custom exception handler to suppress known, benign errors that occur
+    during the shutdown of the asyncio event loop in a threaded environment.
+    """
+    exception = context.get("exception")
+    
+    # Check for the specific RuntimeError from anyio/mcp-sdk
+    is_cancel_scope_error = (
+        isinstance(exception, RuntimeError)
+        and "Attempted to exit cancel scope" in str(exception)
+    )
+    
+    # Check for other common, harmless shutdown-related exceptions
+    is_generator_exit = isinstance(exception, GeneratorExit)
+    is_cancelled_error = isinstance(exception, asyncio.CancelledError)
+
+    if is_cancel_scope_error or is_generator_exit or is_cancelled_error:
+        # Suppress the error by doing nothing
+        pass
+    else:
+        # For all other errors, use the default handler to log them
+        loop.default_exception_handler(context)
+
 @app.route('/api/tools', methods=['GET'])
 def get_tools():
     """Get list of available MCP tools."""
+    from src.config import load_mcp_config
+    
+    async def get_tools_from_server(server_config):
+        """Helper to connect to a single server and fetch tools."""
+        from agents.mcp import MCPServerStdio, MCPServerStreamableHttp
+        from src.config import PROJECT_ROOT
+        import os
+
+        server_name = server_config.get('name')
+        if not server_name:
+            return None
+
+        server = None
+        tool_list = []
+        try:
+            print(f"🔍 Concurrently connecting to MCP server: {server_name}")
+            if "url" in server_config:
+                params = {"url": server_config["url"]}
+                if "headers" in server_config:
+                    params["headers"] = server_config["headers"]
+                server = MCPServerStreamableHttp(params=params, cache_tools_list=True)
+            else:
+                args = server_config.get("args", [])
+                for i, arg in enumerate(args):
+                    if arg.startswith('src/'):
+                        args[i] = os.path.join(PROJECT_ROOT, arg)
+                server = MCPServerStdio(
+                    params={
+                        "command": server_config.get("command"), "args": args, "cwd": PROJECT_ROOT,
+                        "env": os.environ, "shell": True
+                    },
+                    cache_tools_list=True
+                )
+            
+            await server.connect()
+            tools = await server.list_tools()
+            
+            if tools:
+                tool_list = [
+                    {"name": tool.name, "description": getattr(tool, 'description', 'No description available')}
+                    for tool in tools
+                ]
+                print(f"✅ Found {len(tool_list)} tools in {server_name}")
+            else:
+                 tool_list = [{"name": "No tools", "description": "Server connected but no tools available"}]
+            
+            return (server_name, tool_list)
+
+        except Exception as e:
+            print(f"❌ Error getting tools from {server_name}: {e}")
+            logging.error(f'Tool fetch failed for {server_name}: {e}', exc_info=True)
+            error_info = [{"name": "Error", "description": f"Failed to get tools: {str(e)}"}]
+            return (server_name, error_info)
+
+    async def fetch_all_tools_concurrently():
+        """Gathers tools from all configured servers concurrently."""
+        config = load_mcp_config()
+        mcp_servers_config = config.get('mcpServers', [])
+        
+        tasks = [get_tools_from_server(conf) for conf in mcp_servers_config]
+        results = await asyncio.gather(*tasks)
+        
+        final_tools = {}
+        for result in results:
+            if result:
+                server_name, tool_list = result
+                final_tools[server_name] = tool_list
+        return final_tools
+
+    loop = None
     try:
-        if not mcp_servers:
-            # Return configured servers if no active connections
-            mcp_config = config.get("mcpServers", [])
-            tools_by_server = {
-                server.get('name', f'Server-{i+1}'): [{"name": "Server not connected", "description": "Please initialize the agent first"}] 
-                for i, server in enumerate(mcp_config)
-            }
-            return jsonify(tools_by_server)
-        
-        tools_by_server = {}
-        
-        # Try to get tools from connected servers
-        print(f"🔍 Debugging: Found {len(mcp_servers)} MCP servers")
-        
+        # Manually create and manage the event loop to set a custom exception handler
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        try:
-            async def get_server_tools():
-                for i, server in enumerate(mcp_servers):
-                    try:
-                        # Different ways to get server name
-                        server_name = f"Server-{i+1}"
-                        if hasattr(server, 'name'):
-                            server_name = server.name
-                        elif hasattr(server, 'params') and isinstance(server.params, dict):
-                            if 'command' in server.params:
-                                server_name = f"{server.params['command']}"
-                                if 'args' in server.params and server.params['args']:
-                                    server_name += f" {' '.join(server.params['args'][:2])}"
-                        
-                        print(f"🔍 Debugging server {i}: {server_name}")
-                        print(f"   Server type: {type(server)}")
-                        print(f"   Has list_tools: {hasattr(server, 'list_tools')}")
-                        print(f"   Has get_tools: {hasattr(server, 'get_tools')}")
-                        
-                        # Try multiple methods to get tools with timeout
-                        tools_result = None
-                        if hasattr(server, 'list_tools'):
-                            print(f"   Calling list_tools()...")
-                            try:
-                                # Add 10 second timeout to prevent hanging
-                                tools_result = await asyncio.wait_for(
-                                    server.list_tools(), 
-                                    timeout=10.0
-                                )
-                                print(f"   Tools result: {tools_result}")
-                                print(f"   Tools result type: {type(tools_result)}")
-                                if tools_result:
-                                    print(f"   Has tools attr: {hasattr(tools_result, 'tools')}")
-                                    if hasattr(tools_result, 'tools'):
-                                        print(f"   Tools count: {len(tools_result.tools) if tools_result.tools else 0}")
-                            except asyncio.TimeoutError:
-                                print(f"   ⏰ list_tools() timed out after 10 seconds")
-                                tools_result = None
-                            except Exception as list_error:
-                                print(f"   ❌ list_tools() failed: {list_error}")
-                                tools_result = None
-                        elif hasattr(server, 'get_tools'):
-                            print(f"   Calling get_tools()...")
-                            try:
-                                tools_result = await asyncio.wait_for(
-                                    server.get_tools(), 
-                                    timeout=10.0
-                                )
-                            except asyncio.TimeoutError:
-                                print(f"   ⏰ get_tools() timed out after 10 seconds")
-                                tools_result = None
-                        
-                        if tools_result and hasattr(tools_result, 'tools') and tools_result.tools:
-                            tool_list = []
-                            for tool in tools_result.tools:
-                                tool_info = {
-                                    "name": tool.name,
-                                    "description": getattr(tool, 'description', 'No description available')
-                                }
-                                tool_list.append(tool_info)
-                                print(f"   Found tool: {tool.name}")
-                            
-                            tools_by_server[server_name] = tool_list
-                        else:
-                            # Fallback: just show that server is connected
-                            print(f"   No tools found, showing connection status")
-                            tools_by_server[server_name] = [
-                                {"name": "Connected", "description": "MCP server is connected but no tools found"}
-                            ]
-                            
-                    except Exception as e:
-                        print(f"❌ Error getting tools from server {i}: {e}")
-                        import traceback
-                        traceback.print_exc()
-                        server_name = f"Server-{i+1}-Error"
-                        tools_by_server[server_name] = [
-                            {"name": "Error", "description": f"Failed to get tools: {str(e)}"}
-                        ]
-            
-            loop.run_until_complete(get_server_tools())
-        finally:
-            loop.close()
         
-        print(f"🔍 Final tools_by_server: {tools_by_server}")
+        # Set the custom handler to suppress specific shutdown errors
+        loop.set_exception_handler(_suppress_async_shutdown_error_handler)
         
-        # If still no tools, show configuration
-        if not tools_by_server:
-            mcp_config = config.get("mcpServers", [])
-            tools_by_server = {
-                server.get('name', f'Server-{i+1}'): [{"name": "No tools found", "description": "Server connected but no tools available"}] 
-                for i, server in enumerate(mcp_config)
-            }
+        # Run the entire concurrent operation
+        tools_data = loop.run_until_complete(fetch_all_tools_concurrently())
         
-        return jsonify(tools_by_server)
+        return jsonify(tools_data)
         
     except Exception as e:
-        print(f"Error in get_tools: {e}")
+        print(f"Error in get_tools endpoint: {e}")
         return jsonify({'error': str(e)}), 500
+    finally:
+        if loop:
+            # Ensure the loop is closed to prevent resource leaks
+            loop.close()
+
 
 @app.route('/api/status', methods=['GET'])
 def get_status():

@@ -450,15 +450,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadTools = async () => {
         try {
             const response = await fetch('/api/tools');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const tools = await response.json();
             displayMcpTools(tools);
         } catch (error) {
             console.error('Error loading tools:', error);
+            mcpToolsContainer.innerHTML = `<div class="tool-item"><span class="tool-description error">Failed to load tools. See console for details.</span></div>`;
+            updateCollapsibleHeight('mcp-tools');
         }
     };
 
     const displayMcpTools = (toolsByServer) => {
         mcpToolsContainer.innerHTML = '';
+        
+        if (!toolsByServer || Object.keys(toolsByServer).length === 0) {
+            mcpToolsContainer.innerHTML = '<div class="tool-item"><span class="tool-description">No tools found. Please configure MCP servers and initialize the agent.</span></div>';
+            updateCollapsibleHeight('mcp-tools');
+            return;
+        }
         
         // Check if toolsByServer is the old format (array) or new format (object)
         if (Array.isArray(toolsByServer)) {
@@ -543,6 +554,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize
     loadConfig();
-    // loadTools();
+    loadTools();
     clearChat(); // Add this line to display the initial message
 });
