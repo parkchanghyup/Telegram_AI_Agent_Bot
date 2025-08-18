@@ -98,6 +98,7 @@ body {
     overflow-y: auto;
     opacity: 1;
     transition: opacity 0.2s ease;
+    padding-right: 12px; /* Add padding for scrollbar */
 }
 
 .sidebar.collapsed .sidebar-content {
@@ -289,6 +290,12 @@ body {
     font-size: 20px;
     margin-top: 2px;
     flex-shrink: 0;
+}
+
+.bot-message-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
 }
 
 .bot-message-wrapper {

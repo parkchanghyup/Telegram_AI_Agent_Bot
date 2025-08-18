@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Show typing indicator
         const typingId = 'typing-' + Date.now();
-        appendMessage('bot-message', '🤖 생각 중...', typingId);
+        appendMessage('bot-message', '생각 중...', typingId);
 
         try {
             const response = await fetch('/chat', {
@@ -94,11 +94,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // For bot messages, create proper structure with emoji and content wrapper
         if (senderClass === 'bot-message') {
-            // Create emoji element
-            const emojiElement = document.createElement('div');
-            emojiElement.classList.add('bot-message-emoji');
-            emojiElement.textContent = '🤖';
-            
+            // Create image element for bot icon
+            const imgElement = document.createElement('img');
+            imgElement.src = '/static/img.png';
+            imgElement.alt = 'Bot Icon';
+            imgElement.classList.add('bot-message-icon');
+
+            // Create a wrapper for the icon
+            const iconWrapper = document.createElement('div');
+            iconWrapper.classList.add('bot-message-emoji');
+            iconWrapper.appendChild(imgElement);
+
             // Create wrapper for content and copy button
             const messageWrapper = document.createElement('div');
             messageWrapper.classList.add('bot-message-wrapper');
@@ -152,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Assemble the structure
             messageWrapper.appendChild(contentWrapper);
             messageWrapper.appendChild(copyButton);
-            messageElement.appendChild(emojiElement);
+            messageElement.appendChild(iconWrapper); // Append the icon wrapper
             messageElement.appendChild(messageWrapper);
         } else {
             // For user messages, just set text content
