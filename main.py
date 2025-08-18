@@ -29,6 +29,7 @@ setup_file_logger()
 
 main_agent = None
 mcp_servers = []
+server_names = []
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """봇 시작 명령어 핸들러"""
@@ -80,15 +81,34 @@ async def shutdown_servers(app):
 
 def main() -> None:
     """봇 실행 메인 함수"""
-    global main_agent, mcp_servers
+    global main_agent, mcp_servers, server_names
     
     loop = asyncio.get_event_loop()
     
     try:
-        main_agent, mcp_servers = loop.run_until_complete(setup_agent_and_servers())
+        main_agent, mcp_servers, server_names = loop.run_until_complete(setup_agent_and_servers())
     except Exception as e:
         logging.error(f"초기 설정 실패: {e}", exc_info=True)
         return
+
+    # ✅ MCP 서버 tools 목록 출력
+    try:
+        for i, server in enumerate(mcp_servers):
+            tools = loop.run_until_complete(server.list_tools())  # List[Tool]
+            
+            # mcp_config.json에서 정의한 서버 이름 사용
+            if i < len(server_names):
+                server_name = server_names[i]
+            else:
+                server_name = f"MCP Server #{i+1}"
+                
+            print(f"\n🔧 {server_name} Tools:")
+            for tool in tools:
+                # print(f"  - {tool.name} : {getattr(tool, 'description', '')}")
+                print(f" - {tool.name}")
+    except Exception as e:
+        logging.error(f'tool 호출 실패: {e}', exc_info=True)
+                
 
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).post_shutdown(shutdown_servers).build()
 

@@ -14,11 +14,12 @@ from .config import (
 async def setup_agent_and_servers():
     """MCP 서버와 AI 에이전트를 설정합니다."""
     mcp_servers = []
+    server_names = []  # 서버 이름 저장용
     
     # LLM 설정 로드
     llm_config = load_llm_config()
     if not llm_config:
-        return None, []
+        return None, [], []
     
     # LLMFactory 인스턴스 생성
     llm_factory = LLMFactory(llm_config)
@@ -69,6 +70,7 @@ async def setup_agent_and_servers():
             await server.connect()
             logging.info(f"MCP 서버 연결 성공: name={server_name}")
             mcp_servers.append(server)
+            server_names.append(server_name)  # 서버 이름도 함께 저장
         except Exception as e:
             logging.error(f"MCP 서버 연결 실패: name={server_name}, error={str(e)}")
             logging.info(f"MCP 서버 '{server_name}' 없이 계속 진행합니다.")
@@ -86,4 +88,4 @@ async def setup_agent_and_servers():
 
     logging.info("AI 에이전트 및 MCP 서버가 성공적으로 설정되었습니다.")
 
-    return main_agent, mcp_servers
+    return main_agent, mcp_servers, server_names
