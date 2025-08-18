@@ -20,7 +20,7 @@ async def setup_agent_and_servers():
     llm_config = load_llm_config()
     if not llm_config:
         return None, [], []
-    
+
     # LLMFactory 인스턴스 생성
     llm_factory = LLMFactory(llm_config)
     
@@ -67,12 +67,17 @@ async def setup_agent_and_servers():
             )
         
         try:
+            # 서버 연결 시도
             await server.connect()
             logging.info(f"MCP 서버 연결 성공: name={server_name}")
             mcp_servers.append(server)
             server_names.append(server_name)  # 서버 이름도 함께 저장
         except Exception as e:
-            logging.error(f"MCP 서버 연결 실패: name={server_name}, error={str(e)}")
+            # Streamable HTTP 에러는 warning 레벨로 낮춤
+            if "Streamable HTTP" in str(e) or "Transport" in str(e):
+                logging.warning(f"MCP 서버 연결 실패 (일시적): name={server_name}, error={str(e)}")
+            else:
+                logging.error(f"MCP 서버 연결 실패: name={server_name}, error={str(e)}")
             logging.info(f"MCP 서버 '{server_name}' 없이 계속 진행합니다.")
 
     # Load the universal prompt from file
