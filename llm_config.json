@@ -1,0 +1,5 @@
+{
+    "llm_provider": "openai",
+    "model_name": "gpt-4o-mini",
+    "ollama_base_url": "http://localhost:11434/v1"
+}
