@@ -62,16 +62,18 @@ body {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     background-color: transparent;
     border: 1px solid #5f6368;
     color: #e3e3e3;
-    padding: 12px;
-    border-radius: 8px;
+    padding: 14px 16px;
+    border-radius: 10px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
     text-align: left;
     white-space: nowrap;
+    transition: all 0.2s ease;
 }
 
 .new-chat-btn:hover {
@@ -106,10 +108,12 @@ body {
 }
 
 .sidebar-title {
-    font-size: 14px;
+    font-size: 15px;
     color: #9aa0a6;
-    margin: 20px 0 10px;
+    margin: 24px 0 12px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -657,20 +661,20 @@ body {
 /* Simple JSON Import Section */
 .json-import-simple {
     background-color: #2a2b2c;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
     border: 1px solid #3c4043;
 }
 
 .import-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 16px;
     color: #4285f4;
-    font-weight: 500;
-    font-size: 13px;
+    font-weight: 600;
+    font-size: 15px;
 }
 
 .import-header i {
@@ -707,23 +711,24 @@ body {
 /* Import buttons container */
 .import-buttons {
     display: flex;
-    gap: 8px;
-    margin-top: 10px;
+    gap: 12px;
+    margin-top: 16px;
 }
 
 .btn-import-simple, .btn-save-config {
     border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
+    border-radius: 8px;
+    padding: 12px 20px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     transition: all 0.2s ease;
     flex: 1;
     justify-content: center;
+    min-height: 44px;
 }
 
 .btn-import-simple {
@@ -733,6 +738,8 @@ body {
 
 .btn-import-simple:hover {
     background-color: #5a95f5;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(66, 133, 244, 0.3);
 }
 
 .btn-save-config {
@@ -742,8 +749,8 @@ body {
 
 .btn-save-config:hover {
     background: linear-gradient(135deg, #4ade80 0%, #5de88a 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(52, 168, 83, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 168, 83, 0.4);
 }
 
 .btn-import-simple i, .btn-save-config i {
@@ -786,10 +793,11 @@ body {
 }
 
 .form-group label {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     color: #9aa0a6; /* Subtle text color, matches sidebar titles */
-    padding-left: 4px;
+    padding-left: 6px;
+    margin-bottom: 2px;
 }
 
 .llm-config-form input[type="text"],
@@ -797,13 +805,14 @@ body {
     width: 100%;
     background-color: #1e1f20;
     border: 1px solid #3c4043;
-    border-radius: 6px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 14px 16px;
     color: #e3e3e3;
-    font-size: 14px;
+    font-size: 15px;
     font-family: 'Google Sans', sans-serif;
     box-sizing: border-box;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    line-height: 1.4;
 }
 
 .llm-config-form input[type="text"]:focus,
@@ -963,10 +972,39 @@ body {
     flex: 1;
 }
 
-#save-env-config:hover {
-    background: linear-gradient(135deg, #2d8f47, #0f6b29);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(52, 168, 83, 0.3);
+/* Sidebar Action Button Styles */
+.sidebar-section {
+    margin-bottom: 24px;
+}
+
+.sidebar-action-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #4285f4, #1a73e8);
+    color: white;
+    border: none;
+    padding: 16px 20px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Google Sans', sans-serif;
+    text-align: left;
+    justify-content: flex-start;
+}
+
+.sidebar-action-btn:hover {
+    background: linear-gradient(135deg, #3367d6, #185abc);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+}
+
+.sidebar-action-btn i {
+    font-size: 18px;
+    flex-shrink: 0;
 }
 
 /* Success Modal Styles */
@@ -1026,23 +1064,25 @@ body {
     background: linear-gradient(135deg, #4285f4, #1a73e8);
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 500;
+    padding: 14px 28px;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-family: 'Google Sans', sans-serif;
     margin-top: 8px;
+    min-width: 120px;
+    justify-content: center;
 }
 
 .modal-close-btn:hover {
     background: linear-gradient(135deg, #3367d6, #185abc);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(66, 133, 244, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
 }
 
 /* Modal Animations */
@@ -1078,5 +1118,283 @@ body {
         transform: scale(1);
         opacity: 1;
     }
+}
+
+/* Environment Variables Modal Styles */
+.env-modal {
+    background-color: #202123;
+    border-radius: 4px;
+    border: 1px solid #3c4043;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 800px;
+    max-height: 52vh;
+    animation: modalSlideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-family: 'Google Sans', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.env-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 80%;
+}
+
+.env-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px 28px;
+    border-bottom: 1px solid #3c4043;
+}
+
+.env-header-content h2 {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    font-family: 'Google Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.env-header-content p {
+    color: #9aa0a6;
+    font-size: 14px;
+    margin: 0;
+    font-family: 'Google Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.env-modal-close {
+    background: none;
+    border: none;
+    color: #9aa0a6;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+}
+
+.env-modal-close:hover {
+    background-color: #3c4043;
+    color: #e3e3e3;
+    transform: scale(1.1);
+}
+
+.env-modal-body {
+    flex: 1;
+    padding: 28px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+}
+
+.env-modal-body .env-variables-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.env-modal-body .env-variable-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0;
+    border: none;
+    background: none;
+    border-radius: 0;
+}
+
+.env-modal-body .env-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.env-modal-body .env-key,
+.env-modal-body .env-value {
+    border: 1px solid #555;
+    background-color: #1e1f20;
+    color: #f0f0f0;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Google Sans', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.env-modal-body .env-key {
+    flex: 1;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+.env-modal-body .env-value {
+    flex: 2;
+    font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Courier New', monospace;
+    color: #ffffff !important;
+    font-size: 15px;
+}
+
+.env-modal-body .env-key:focus,
+.env-modal-body .env-value:focus {
+    border-color: #7f8aff;
+    box-shadow: 0 0 0 3px rgba(127, 138, 255, 0.3);
+}
+
+.env-modal-body .env-key::placeholder,
+.env-modal-body .env-value::placeholder {
+    color: #9aa0a6;
+    font-style: normal;
+}
+
+.env-modal-body .btn-delete-env {
+    background-color: transparent;
+    border: 2px solid #ff4d4d;
+    color: #ff4d4d;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.env-modal-body .btn-delete-env:hover {
+    background-color: #ff4d4d;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.env-modal-body .btn-add-env {
+    background: linear-gradient(135deg, #4285f4, #1a73e8);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Google Sans', sans-serif;
+    align-self: flex-start;
+}
+
+.env-modal-body .btn-add-env:hover {
+    background: linear-gradient(135deg, #3367d6, #185abc);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+.env-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 12px 12px 16px;
+    border-top: 1px solid #3c4043;
+    margin-top: 25px;
+}
+
+.env-modal-footer .btn-add-env {
+    background-color: #3e8e41;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Google Sans', sans-serif;
+    width: auto;
+    min-width: 120px;
+    max-width: 150px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.env-modal-footer .btn-add-env:hover {
+    background-color: #4caf50;
+}
+
+.env-modal-footer .btn-add-env:active {
+    transform: scale(0.98);
+}
+
+.env-modal-footer #save-env-config {
+    background-color: #5a67d8;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Google Sans', sans-serif;
+    width: auto;
+    min-width: 120px;
+    max-width: 150px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.env-modal-footer #save-env-config:hover {
+    background-color: #7f8aff;
+}
+
+.env-modal-footer #save-env-config:active {
+    transform: scale(0.98);
 }
 

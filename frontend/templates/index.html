@@ -29,28 +29,11 @@
                 </button>
             </div>
             <div class="sidebar-content">
-                <div class="collapsible-section">
-                    <button class="collapsible-header" id="env-config-toggle">
-                        <h3 class="sidebar-title">Environment Variables</h3>
-                        <i class="fas fa-chevron-down"></i>
+                <div class="sidebar-section">
+                    <button class="sidebar-action-btn" id="open-env-modal-btn">
+                        <i class="fas fa-cog"></i>
+                        <span>Environment Variables</span>
                     </button>
-                    <div class="collapsible-content env-config" id="env-config-content">
-                        <div class="env-config-form">
-                            <div class="env-variables-container" id="env-variables-container">
-                                <!-- Environment variables will be dynamically added here -->
-                            </div>
-                            <div class="env-actions">
-                                <button class="btn-add-env" id="add-env-btn">
-                                    <i class="fas fa-plus"></i>
-                                    Add Variable
-                                </button>
-                                <button class="btn-save-config" id="save-env-config">
-                                    <i class="fas fa-save"></i>
-                                    Save .env File
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="collapsible-section">
@@ -163,6 +146,38 @@
                     <i class="fas fa-times"></i>
                     Close
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Variables Modal -->
+    <div class="modal-overlay" id="env-modal-overlay">
+        <div class="env-modal" id="env-modal">
+            <div class="env-modal-content">
+                <div class="env-modal-header">
+                    <div class="env-header-content">
+                        <h2>Environment Variables</h2>
+                        <p>프로젝트의 비밀 키와 환경 설정을 관리합니다.</p>
+                    </div>
+                    <button class="env-modal-close" id="env-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="env-modal-body">
+                    <div class="env-variables-container" id="env-variables-container">
+                        <!-- Environment variables will be dynamically added here -->
+                    </div>
+                </div>
+                <div class="env-modal-footer">
+                    <button class="btn-add-env" id="add-env-btn">
+                        <i class="fas fa-plus"></i>
+                        변수 추가
+                    </button>
+                    <button class="btn-save-config" id="save-env-config">
+                        <i class="fas fa-save"></i>
+                        .env 파일 저장
+                    </button>
+                </div>
             </div>
         </div>
     </div>

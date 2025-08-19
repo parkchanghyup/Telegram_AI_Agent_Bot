@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const ollamaUrlGroup = document.getElementById('ollama-url-group');
 
     // Environment Config Elements
-    const envConfigToggle = document.getElementById('env-config-toggle');
+    const openEnvModalBtn = document.getElementById('open-env-modal-btn');
+    const envModalOverlay = document.getElementById('env-modal-overlay');
+    const envModalClose = document.getElementById('env-modal-close');
     const envVariablesContainer = document.getElementById('env-variables-container');
     const addEnvBtn = document.getElementById('add-env-btn');
     const saveEnvConfigBtn = document.getElementById('save-env-config');
@@ -263,6 +265,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
+    // Environment Modal functionality
+    const showEnvModal = () => {
+        envModalOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        
+        // Load current environment variables
+        loadEnvConfig();
+    };
+
+    const hideEnvModal = () => {
+        envModalOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    };
+
     // Environment Configuration functionality
     let envVariableCount = 0;
 
@@ -274,10 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         rowDiv.innerHTML = `
             <div class="env-inputs">
-                <input type="text" class="env-key" placeholder="Variable Name (e.g., OPENAI_API_KEY)" value="${key}">
-                <input type="text" class="env-value" placeholder="Variable Value" value="${value}">
-                <button class="btn-delete-env" onclick="removeEnvVariable('${rowId}')">
-                    <i class="fas fa-trash"></i>
+                <input type="text" class="env-key" placeholder="새 변수 이름" value="${key}">
+                <input type="text" class="env-value" placeholder="값" value="${value}">
+                <button class="btn-delete-env" onclick="removeEnvVariable('${rowId}')" title="Delete variable">
+                    ×
                 </button>
             </div>
         `;
@@ -288,14 +304,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const addEnvVariable = (key = '', value = '') => {
         const rowElement = createEnvVariableRow(key, value);
         envVariablesContainer.appendChild(rowElement);
-        updateCollapsibleHeight('env-config-content');
     };
 
     window.removeEnvVariable = (rowId) => {
         const rowElement = document.getElementById(rowId);
         if (rowElement) {
             rowElement.remove();
-            updateCollapsibleHeight('env-config-content');
         }
     };
 
@@ -372,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 showSuccessModal('✅ .env 파일이 저장되었습니다.');
+                hideEnvModal(); // Close the env modal after successful save
             } else {
                 alert('Error saving .env file: ' + result.error);
             }
@@ -454,11 +469,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showSuccessModal('🎉 에이전트 초기화가 완료되었습니다!');
                 // Refresh config and tools
                 loadConfig();
-                loadEnvConfig();
                 loadLlmConfig();
                 loadTools();
                 setTimeout(() => {
-                    updateCollapsibleHeight('env-config-content');
                     updateCollapsibleHeight('mcp-servers');
                     updateCollapsibleHeight('mcp-tools');
                     updateCollapsibleHeight('llm-config-content');
@@ -751,12 +764,16 @@ document.addEventListener('DOMContentLoaded', () => {
     importJsonBtn.addEventListener('click', importJson);
     llmProviderSelect.addEventListener('change', toggleLlmFields);
     saveLlmConfigBtn.addEventListener('click', saveLlmConfig);
+    
+    // Environment Modal event listeners
+    openEnvModalBtn.addEventListener('click', showEnvModal);
+    envModalClose.addEventListener('click', hideEnvModal);
     addEnvBtn.addEventListener('click', () => {
         addEnvVariable();
     });
     saveEnvConfigBtn.addEventListener('click', saveEnvConfig);
     
-    // Modal event listeners
+    // Success Modal event listeners
     modalCloseBtn.addEventListener('click', hideSuccessModal);
     successModalOverlay.addEventListener('click', (e) => {
         if (e.target === successModalOverlay) {
@@ -764,25 +781,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // ESC key to close modal
+    // Environment Modal event listeners
+    envModalOverlay.addEventListener('click', (e) => {
+        if (e.target === envModalOverlay) {
+            hideEnvModal();
+        }
+    });
+    
+    // ESC key to close modals
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && successModalOverlay.classList.contains('show')) {
-            hideSuccessModal();
+        if (e.key === 'Escape') {
+            if (successModalOverlay.classList.contains('show')) {
+                hideSuccessModal();
+            } else if (envModalOverlay.classList.contains('show')) {
+                hideEnvModal();
+            }
         }
     });
 
-    envConfigToggle.addEventListener('click', () => {
-        const content = document.getElementById('env-config-content');
-        const icon = envConfigToggle.querySelector('i');
-        content.classList.toggle('expanded');
-        if (content.classList.contains('expanded')) {
-            icon.style.transform = 'rotate(180deg)';
-            updateCollapsibleHeight('env-config-content');
-        } else {
-            icon.style.transform = 'rotate(0deg)';
-            content.style.maxHeight = null;
-        }
-    });
+
 
     mcpServersToggle.addEventListener('click', () => {
         const content = document.getElementById('mcp-servers');
@@ -827,7 +844,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize
     loadConfig();
-    loadEnvConfig();
     loadLlmConfig();
     loadTools();
     clearChat(); // Add this line to display the initial message
