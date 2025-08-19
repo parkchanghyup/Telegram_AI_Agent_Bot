@@ -14,6 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const jsonImportTextarea = document.getElementById('json-import');
     const importJsonBtn = document.getElementById('import-json');
 
+    // LLM Config Elements
+    const llmConfigToggle = document.getElementById('llm-config-toggle');
+    const llmProviderSelect = document.getElementById('llm-provider');
+    const modelNameInput = document.getElementById('model-name');
+    const ollamaUrlInput = document.getElementById('ollama-url');
+    const saveLlmConfigBtn = document.getElementById('save-llm-config');
+    const ollamaUrlGroup = document.getElementById('ollama-url-group');
+
+
+
     let currentConfig = {};
 
     // Helper function to update collapsible section height
@@ -226,6 +236,94 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessage('bot-message', '안녕하세요! 새로운 대화를 시작합니다. 무엇을 도와드릴까요?');
     };
 
+    // LLM Configuration functionality
+    const loadLlmConfig = async () => {
+        try {
+            const response = await fetch('/api/llm_config');
+            const llmConfig = await response.json();
+            
+            llmProviderSelect.value = llmConfig.llm_provider || 'openai';
+            modelNameInput.value = llmConfig.model_name || '';
+            ollamaUrlInput.value = llmConfig.ollama_base_url || 'http://localhost:11434/v1';
+
+            toggleLlmFields();
+        } catch (error) {
+            console.error('Error loading LLM config:', error);
+        }
+    };
+
+    const toggleLlmFields = () => {
+        const provider = llmProviderSelect.value;
+        if (provider === 'ollama') {
+            ollamaUrlGroup.style.display = 'block';
+        } else {
+            ollamaUrlGroup.style.display = 'none';
+        }
+        updateCollapsibleHeight('llm-config-content');
+    };
+
+    const saveLlmConfig = async () => {
+        const newLlmConfig = {
+            llm_provider: llmProviderSelect.value,
+            model_name: modelNameInput.value.trim(),
+            ollama_base_url: ollamaUrlInput.value.trim()
+        };
+
+        if (!newLlmConfig.model_name) {
+            alert('Model Name is required.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/llm_config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newLlmConfig)
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                appendMessage('bot-message', '✅ LLM 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
+                
+                // Reinitialize agent
+                reinitializeApp();
+            } else {
+                alert('Error saving LLM configuration: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error saving LLM config:', error);
+            alert('Error saving LLM configuration.');
+        }
+    };
+
+    // Function to reinitialize the agent and update UI
+    const reinitializeApp = async () => {
+        try {
+            const initResponse = await fetch('/api/init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const initResult = await initResponse.json();
+            
+            if (initResult.success) {
+                appendMessage('bot-message', '🎉 에이전트 초기화가 완료되었습니다!');
+                // Refresh config and tools
+                loadConfig();
+                loadLlmConfig();
+                loadTools();
+                setTimeout(() => {
+                    updateCollapsibleHeight('mcp-servers');
+                    updateCollapsibleHeight('mcp-tools');
+                    updateCollapsibleHeight('llm-config-content');
+                }, 100);
+            } else {
+                appendMessage('bot-message', `⚠️ 에이전트 초기화 실패: ${initResult.error || 'Unknown error'}`);
+            }
+        } catch (initError) {
+            console.error('Agent initialization error:', initError);
+            appendMessage('bot-message', `⚠️ 에이전트 초기화 중 오류 발생: ${initError.message}`);
+        }
+    };
 
 
     // MCP Configuration functionality
@@ -412,37 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 appendMessage('bot-message', '✅ 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
                 
                 // Reinitialize agent after successful save
-                try {
-                    const initResponse = await fetch('/api/init', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
-                    });
-                    
-                    const initResult = await initResponse.json();
-                    
-                    if (initResult.success) {
-                        appendMessage('bot-message', '🎉 설정 저장 및 에이전트 초기화가 완료되었습니다!');
-                        // Refresh config and tools after successful initialization
-                        loadConfig();
-                        loadTools();
-                        // Update heights after reload
-                        setTimeout(() => {
-                            updateCollapsibleHeight('mcp-servers');
-                            updateCollapsibleHeight('mcp-tools');
-                        }, 100);
-                    } else {
-                        appendMessage('bot-message', `⚠️ 설정은 저장되었지만 에이전트 초기화 실패: ${initResult.error || 'Unknown error'}`);
-                        loadConfig(); // Still refresh config even if init failed
-                        setTimeout(() => updateCollapsibleHeight('mcp-servers'), 100);
-                    }
-                } catch (initError) {
-                    console.error('Agent initialization error:', initError);
-                    appendMessage('bot-message', `⚠️ 설정은 저장되었지만 에이전트 초기화 중 오류 발생: ${initError.message}`);
-                    loadConfig(); // Still refresh config even if init failed
-                    setTimeout(() => updateCollapsibleHeight('mcp-servers'), 100);
-                }
+                reinitializeApp();
+
             } else {
                 alert('Error saving configuration: ' + result.error);
             }
@@ -519,6 +588,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCollapsibleHeight('mcp-tools');
     };
 
+
+
     // Event listeners
     sendBtn.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (e) => {
@@ -531,6 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
     newChatBtn.addEventListener('click', clearChat);
     saveBtn.addEventListener('click', saveConfig);
     importJsonBtn.addEventListener('click', importJson);
+    llmProviderSelect.addEventListener('change', toggleLlmFields);
+    saveLlmConfigBtn.addEventListener('click', saveLlmConfig);
 
     mcpServersToggle.addEventListener('click', () => {
         const content = document.getElementById('mcp-servers');
@@ -558,8 +631,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    llmConfigToggle.addEventListener('click', () => {
+        const content = document.getElementById('llm-config-content');
+        const icon = llmConfigToggle.querySelector('i');
+        content.classList.toggle('expanded');
+        if (content.classList.contains('expanded')) {
+            icon.style.transform = 'rotate(180deg)';
+            updateCollapsibleHeight('llm-config-content');
+        } else {
+            icon.style.transform = 'rotate(0deg)';
+            content.style.maxHeight = null;
+        }
+    });
+
+
+
     // Initialize
     loadConfig();
+    loadLlmConfig();
     loadTools();
     clearChat(); // Add this line to display the initial message
 });

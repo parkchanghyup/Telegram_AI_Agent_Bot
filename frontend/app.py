@@ -21,14 +21,23 @@ class MCPErrorFilter(logging.Filter):
             "Maximum reconnection attempts",
             "Session termination failed",
             "Error POSTing to endpoint",
-            "Failed to reconnect SSE stream"
+            "Failed to reconnect SSE stream",
+            "Bad Request",
+            "HTTP 400",
+            "Sending heartbeat ping",
+            "terminated",
+            "TypeError: terminated",
+            "Failed to open SSE stream: Bad Request",
+            "Failed to reconnect SSE stream: Streamable HTTP error"
         ]
         
         # 중요한 설정 로그는 억제하지 않음
         important_patterns = [
             "MCP 클라이언트 타임아웃 설정",
             "MCP 서버 연결 성공", 
-            "MCP 서버 연결 실패"
+            "MCP 서버 연결 실패",
+            "Agent run successful",
+            "Received chat message"
         ]
         
         # 중요한 메시지는 통과시킴
@@ -37,8 +46,9 @@ class MCPErrorFilter(logging.Filter):
                 return True
         
         # 메시지에 억제 패턴이 포함되어 있으면 False 반환 (로그 출력 안함)
+        message = record.getMessage()
         for pattern in suppress_patterns:
-            if pattern in record.getMessage():
+            if pattern in message:
                 return False
         
         return True
@@ -46,15 +56,38 @@ class MCPErrorFilter(logging.Filter):
 # Load .env from parent directory (telegram_mcp_bot/)
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 env_path = os.path.join(parent_dir, '.env')
-load_dotenv(env_path)
+
+# 디버깅: .env 파일 경로 및 존재 여부 확인
+print(f"🔍 Looking for .env file at: {env_path}")
+print(f"🔍 .env file exists: {os.path.exists(env_path)}")
+
+# .env 파일 로드
+if os.path.exists(env_path):
+    load_dotenv(env_path, override=True)
+    print(f"✅ .env file loaded successfully")
+    
+    # 로드된 환경변수 확인 (처음 몇 개만)
+    test_vars = ['OPENAI_API_KEY', 'TELEGRAM_BOT_TOKEN']
+    for var in test_vars:
+        value = os.getenv(var)
+        if value:
+            print(f"✅ {var}: {value[:10]}..." if len(value) > 10 else f"✅ {var}: {value}")
+        else:
+            print(f"❌ {var}: Not found")
+else:
+    print(f"❌ .env file not found at {env_path}")
 
 # Set environment variables for OpenAI (if not already set)
 if not os.getenv("OPENAI_API_KEY"):
     print("⚠️ Warning: OPENAI_API_KEY not found in environment variables")
     # You can set a default or prompt user to set it
 
-# Disable tracing to avoid permission issues
+# Disable tracing and logging to avoid permission issues
 os.environ.setdefault("OPENAI_AGENTS_TRACING", "false")
+os.environ.setdefault("OPENAI_AGENTS_LOGGING", "false")
+os.environ.setdefault("AGENTS_LOGGING_LEVEL", "ERROR")
+os.environ.setdefault("MCP_LOGGING_LEVEL", "ERROR")
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")
 
 # Add parent directory to path for imports and change working directory
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -66,12 +99,13 @@ print(f"🔄 Changed working directory to: {os.getcwd()}")
 
 from src.agent_setup import setup_agent_and_servers
 from src.utils import load_config
-from src.config import load_mcp_config
+from src.config import load_mcp_config, load_llm_config
 from agents.run import Runner
 
 # Configuration - Use the same loading method as main.py
 config = load_mcp_config()
 config_path = os.path.join(os.path.dirname(__file__), '..', 'mcp_config.json')
+llm_config_path = os.path.join(os.path.dirname(__file__), '..', 'llm_config.json')
 
 # Flask app
 app = Flask(__name__)
@@ -103,6 +137,20 @@ async def initialize_agent():
     try:
         print("🔄 Initializing MCP agent...")
         
+        # Apply logging filters again before agent initialization
+        mcp_filter = MCPErrorFilter()
+        all_possible_loggers = [
+            "", "agents", "openai", "openai.agents", "openai.agents.run", 
+            "openai.agents.runner", "agents.run", "agents.runner", "Runner",
+            "run", "runner", "mcp", "mcp.client", "mcp.server", "streamable",
+            "sse", "openai.agents.streamable", "agents.streamable", "httpx",
+            "httpcore", "anyio", "asyncio"
+        ]
+        
+        for logger_name in all_possible_loggers:
+            logger = logging.getLogger(logger_name)
+            logger.addFilter(mcp_filter)
+            logger.setLevel(logging.ERROR)
 
         # Debug: Print current working directory and paths
         import os
@@ -158,8 +206,13 @@ def chat():
         
         print(f"📨 Received chat message: {user_message[:100]}...")
 
+        # 런타임에 새로 생성된 로거들에도 필터 적용
+        setup_comprehensive_logging_suppression()
+
         async def run_agent_async(agent, message):
             """Coroutine to run the agent."""
+            # 에이전트 실행 직전에 한번 더 로깅 억제
+            setup_comprehensive_logging_suppression()
             return await Runner.run(agent, input=message)
 
         try:
@@ -223,6 +276,36 @@ def save_config():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/llm_config', methods=['GET'])
+def get_llm_config():
+    """Get LLM configuration."""
+    try:
+        llm_config = load_llm_config()
+        return jsonify(llm_config)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/llm_config', methods=['POST'])
+def save_llm_config():
+    """Save LLM configuration."""
+    try:
+        new_config = request.json
+        
+        # Save to file
+        with open(llm_config_path, 'w', encoding='utf-8') as f:
+            json.dump(new_config, f, indent=4, ensure_ascii=False)
+        
+        # Reset agent ready status since config changed
+        global agent_ready
+        agent_ready = False
+        
+        return jsonify({'success': True, 'message': 'LLM configuration saved successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+
 def _suppress_async_shutdown_error_handler(loop, context):
     """
     Custom exception handler to suppress known, benign errors that occur
@@ -285,6 +368,11 @@ def _suppress_async_shutdown_error_handler(loop, context):
         or "Streamable HTTP error" in message
         or "Maximum reconnection attempts" in message
         or "Session termination failed" in message
+        or "Bad Request" in message
+        or "HTTP 400" in message
+        or "Sending heartbeat ping" in message
+        or "terminated" in str(exception)
+        or "TypeError: terminated" in str(exception)
     )
     
     # Suppress all known benign errors
@@ -361,17 +449,39 @@ def init_agent():
         return jsonify({'error': str(e)}), 500
 
 
+def setup_comprehensive_logging_suppression():
+    """포괄적인 로깅 억제 설정"""
+    mcp_filter = MCPErrorFilter()
+    
+    # 로깅 레벨을 WARNING으로 설정해서 INFO 레벨의 무해한 메시지들 억제
+    logging.getLogger().setLevel(logging.WARNING)
+    
+    # 모든 기존 로거에 필터 적용
+    for name in logging.Logger.manager.loggerDict:
+        logger = logging.getLogger(name)
+        logger.addFilter(mcp_filter)
+        if 'werkzeug' not in name.lower():
+            logger.setLevel(logging.ERROR)
+    
+    # 특정 로거들에 강제로 필터 적용
+    critical_loggers = [
+        "", "agents", "openai", "openai.agents", "run", "runner", "Runner",
+        "mcp", "streamable", "sse", "httpx", "anyio", "asyncio"
+    ]
+    
+    for logger_name in critical_loggers:
+        logger = logging.getLogger(logger_name)
+        logger.addFilter(mcp_filter)
+        logger.setLevel(logging.ERROR)
+        logger.propagate = False  # 부모 로거로 전파 방지
+
 if __name__ == '__main__':
     print("🤖 Starting MCP Agent Web Interface...")
 
     # MCP 설정은 기본값 사용
 
-    # MCP 에러 필터 적용 - 루트 로거와 관련 로거들에 필터 추가
-    mcp_filter = MCPErrorFilter()
-    logging.getLogger().addFilter(mcp_filter)
-    logging.getLogger("agents").addFilter(mcp_filter)
-    logging.getLogger("openai.agents").addFilter(mcp_filter)
-    logging.getLogger("mcp").addFilter(mcp_filter)
+    # 포괄적인 로깅 억제 설정 적용
+    setup_comprehensive_logging_suppression()
 
     # Set up and start the background event loop
     background_loop = asyncio.new_event_loop()
@@ -391,7 +501,7 @@ if __name__ == '__main__':
         print(f"❌ Agent initialization failed: {e}")
 
     print("🌐 Starting web server...")
-    print("📱 Open http://1227.0.0.1:5001 in your browser")
+    print("📱 Open http://127.0.0.1:5001 in your browser")
 
     try:
         # Note: We are now importing threading

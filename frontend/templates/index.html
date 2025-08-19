@@ -30,6 +30,36 @@
             </div>
             <div class="sidebar-content">
                 <div class="collapsible-section">
+                    <button class="collapsible-header" id="llm-config-toggle">
+                        <h3 class="sidebar-title">LLM Configuration</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="collapsible-content llm-config" id="llm-config-content">
+                        <div class="llm-config-form">
+                            <div class="form-group">
+                                <label for="llm-provider">LLM Provider</label>
+                                <select id="llm-provider">
+                                    <option value="openai">OpenAI</option>
+                                    <option value="ollama">Ollama</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="model-name-group">
+                                <label for="model-name">Model Name</label>
+                                <input type="text" id="model-name" placeholder="e.g., gpt-4o-mini">
+                            </div>
+                            <div class="form-group" id="ollama-url-group" style="display: none;">
+                                <label for="ollama-url">Ollama Base URL</label>
+                                <input type="text" id="ollama-url" placeholder="http://localhost:11434/v1">
+                            </div>
+                            <button class="btn-save-config" id="save-llm-config">
+                                <i class="fas fa-save"></i>
+                                Save LLM Config
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-section">
                     <button class="collapsible-header" id="mcp-servers-toggle">
                         <h3 class="sidebar-title">MCP Servers</h3>
                         <i class="fas fa-chevron-down"></i>
