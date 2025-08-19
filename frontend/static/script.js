@@ -112,6 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const appendMessage = (senderClass, text, messageId = null) => {
+        // Hide chat header when first real message is added (exclude typing indicators)
+        const chatHeader = document.querySelector('.chat-header');
+        const realMessages = chatBox.querySelectorAll('.message:not([id*="typing"])');
+        if (chatHeader && realMessages.length === 0 && !messageId?.includes('typing')) {
+            chatHeader.style.display = 'none';
+        }
+
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', senderClass);
         
@@ -246,7 +253,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearChat = () => {
         chatBox.innerHTML = '';
         userInput.value = '';
-        appendMessage('bot-message', '안녕하세요! 새로운 대화를 시작합니다. 무엇을 도와드릴까요?');
+        // Show chat header when chat is cleared
+        const chatHeader = document.querySelector('.chat-header');
+        if (chatHeader) {
+            chatHeader.style.display = 'block';
+        }
     };
 
     // Success Modal functionality

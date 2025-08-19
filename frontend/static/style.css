@@ -241,11 +241,18 @@ body {
     background: transparent;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .chat-header {
-    padding: 24px 0;
+    padding: 0;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+    min-height: 70vh;
 }
 
 .chat-header h2 {
@@ -255,6 +262,22 @@ body {
     color: #e3e3e3;
 }
 
+/* Gradient title similar to Gemini style */
+.gradient-title {
+    margin: 0;
+    font-size: 48px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4285f4 0%, #9c27b0 25%, #e91e63 50%, #ff9800 75%, #4caf50 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    letter-spacing: -0.02em;
+    font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: block;
+    width: 100%;
+}
+
 .chat-box {
     flex-grow: 1;
     padding: 20px 0;
@@ -262,6 +285,11 @@ body {
     display: flex;
     flex-direction: column;
     scroll-behavior: smooth;
+}
+
+/* When header is hidden, chat-box takes full space */
+.chat-header[style*="display: none"] ~ .chat-box {
+    flex: 1;
 }
 
 .chat-box .message {
@@ -461,6 +489,7 @@ body {
     max-width: 900px;
     margin: 0 auto;
     width: 90%;
+    flex-shrink: 0;
 }
 
 #user-input {
