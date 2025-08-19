@@ -65,15 +65,6 @@ print(f"🔍 .env file exists: {os.path.exists(env_path)}")
 if os.path.exists(env_path):
     load_dotenv(env_path, override=True)
     print(f"✅ .env file loaded successfully")
-    
-    # 로드된 환경변수 확인 (처음 몇 개만)
-    test_vars = ['OPENAI_API_KEY', 'TELEGRAM_BOT_TOKEN']
-    for var in test_vars:
-        value = os.getenv(var)
-        if value:
-            print(f"✅ {var}: {value[:10]}..." if len(value) > 10 else f"✅ {var}: {value}")
-        else:
-            print(f"❌ {var}: Not found")
 else:
     print(f"❌ .env file not found at {env_path}")
 
@@ -300,6 +291,41 @@ def save_llm_config():
         agent_ready = False
         
         return jsonify({'success': True, 'message': 'LLM configuration saved successfully'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/env', methods=['GET'])
+def get_env():
+    """Get .env file contents."""
+    try:
+        env_file_path = os.path.join(project_root, '.env')
+        
+        if os.path.exists(env_file_path):
+            with open(env_file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return jsonify({'content': content, 'exists': True})
+        else:
+            return jsonify({'content': '', 'exists': False})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/env', methods=['POST'])
+def save_env():
+    """Save .env file."""
+    try:
+        data = request.json
+        content = data.get('content', '')
+        
+        env_file_path = os.path.join(project_root, '.env')
+        
+        # Create .env file with the provided content
+        with open(env_file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        # Reload environment variables
+        load_dotenv(env_file_path, override=True)
+        
+        return jsonify({'success': True, 'message': '.env file saved successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

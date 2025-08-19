@@ -22,6 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveLlmConfigBtn = document.getElementById('save-llm-config');
     const ollamaUrlGroup = document.getElementById('ollama-url-group');
 
+    // Environment Config Elements
+    const envConfigToggle = document.getElementById('env-config-toggle');
+    const envVariablesContainer = document.getElementById('env-variables-container');
+    const addEnvBtn = document.getElementById('add-env-btn');
+    const saveEnvConfigBtn = document.getElementById('save-env-config');
+
+    // Modal Elements
+    const successModalOverlay = document.getElementById('success-modal-overlay');
+    const modalMessageText = document.getElementById('modal-message-text');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
 
 
     let currentConfig = {};
@@ -236,6 +247,140 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessage('bot-message', '안녕하세요! 새로운 대화를 시작합니다. 무엇을 도와드릴까요?');
     };
 
+    // Success Modal functionality
+    const showSuccessModal = (message) => {
+        modalMessageText.textContent = message;
+        successModalOverlay.classList.add('show');
+        
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+    };
+
+    const hideSuccessModal = () => {
+        successModalOverlay.classList.remove('show');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+    };
+
+    // Environment Configuration functionality
+    let envVariableCount = 0;
+
+    const createEnvVariableRow = (key = '', value = '') => {
+        const rowId = `env-row-${envVariableCount++}`;
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'env-variable-row';
+        rowDiv.id = rowId;
+        
+        rowDiv.innerHTML = `
+            <div class="env-inputs">
+                <input type="text" class="env-key" placeholder="Variable Name (e.g., OPENAI_API_KEY)" value="${key}">
+                <input type="text" class="env-value" placeholder="Variable Value" value="${value}">
+                <button class="btn-delete-env" onclick="removeEnvVariable('${rowId}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        return rowDiv;
+    };
+
+    const addEnvVariable = (key = '', value = '') => {
+        const rowElement = createEnvVariableRow(key, value);
+        envVariablesContainer.appendChild(rowElement);
+        updateCollapsibleHeight('env-config-content');
+    };
+
+    window.removeEnvVariable = (rowId) => {
+        const rowElement = document.getElementById(rowId);
+        if (rowElement) {
+            rowElement.remove();
+            updateCollapsibleHeight('env-config-content');
+        }
+    };
+
+    const parseEnvContent = (content) => {
+        const variables = [];
+        const lines = content.split('\n');
+        
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            // Skip empty lines and comments
+            if (trimmedLine && !trimmedLine.startsWith('#')) {
+                const equalIndex = trimmedLine.indexOf('=');
+                if (equalIndex > 0) {
+                    const key = trimmedLine.substring(0, equalIndex).trim();
+                    const value = trimmedLine.substring(equalIndex + 1).trim();
+                    variables.push({ key, value });
+                }
+            }
+        }
+        
+        return variables;
+    };
+
+    const loadEnvConfig = async () => {
+        try {
+            const response = await fetch('/api/env');
+            const envData = await response.json();
+            
+            // Clear existing variables
+            envVariablesContainer.innerHTML = '';
+            envVariableCount = 0;
+            
+            if (envData.content) {
+                const variables = parseEnvContent(envData.content);
+                variables.forEach(({ key, value }) => addEnvVariable(key, value));
+            }
+            
+            // Add at least one empty row if no variables exist
+            if (envVariablesContainer.children.length === 0) {
+                addEnvVariable();
+            }
+            
+        } catch (error) {
+            console.error('Error loading env config:', error);
+            // Add an empty row on error
+            addEnvVariable();
+        }
+    };
+
+    const saveEnvConfig = async () => {
+        const envRows = envVariablesContainer.querySelectorAll('.env-variable-row');
+        const envLines = [];
+        
+        envRows.forEach(row => {
+            const keyInput = row.querySelector('.env-key');
+            const valueInput = row.querySelector('.env-value');
+            const key = keyInput.value.trim();
+            const value = valueInput.value.trim();
+            
+            if (key && value) {
+                envLines.push(`${key}=${value}`);
+            }
+        });
+        
+        const content = envLines.join('\n');
+
+        try {
+            const response = await fetch('/api/env', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                showSuccessModal('✅ .env 파일이 저장되었습니다.');
+            } else {
+                alert('Error saving .env file: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error saving env config:', error);
+            alert('Error saving .env file.');
+        }
+    };
+
     // LLM Configuration functionality
     const loadLlmConfig = async () => {
         try {
@@ -283,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
             if (result.success) {
-                appendMessage('bot-message', '✅ LLM 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
+                showSuccessModal('✅ LLM 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
                 
                 // Reinitialize agent
                 reinitializeApp();
@@ -306,12 +451,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const initResult = await initResponse.json();
             
             if (initResult.success) {
-                appendMessage('bot-message', '🎉 에이전트 초기화가 완료되었습니다!');
+                showSuccessModal('🎉 에이전트 초기화가 완료되었습니다!');
                 // Refresh config and tools
                 loadConfig();
+                loadEnvConfig();
                 loadLlmConfig();
                 loadTools();
                 setTimeout(() => {
+                    updateCollapsibleHeight('env-config-content');
                     updateCollapsibleHeight('mcp-servers');
                     updateCollapsibleHeight('mcp-tools');
                     updateCollapsibleHeight('llm-config-content');
@@ -507,7 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 // Show initial success message
-                appendMessage('bot-message', '✅ 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
+                showSuccessModal('✅ 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
                 
                 // Reinitialize agent after successful save
                 reinitializeApp();
@@ -604,6 +751,38 @@ document.addEventListener('DOMContentLoaded', () => {
     importJsonBtn.addEventListener('click', importJson);
     llmProviderSelect.addEventListener('change', toggleLlmFields);
     saveLlmConfigBtn.addEventListener('click', saveLlmConfig);
+    addEnvBtn.addEventListener('click', () => {
+        addEnvVariable();
+    });
+    saveEnvConfigBtn.addEventListener('click', saveEnvConfig);
+    
+    // Modal event listeners
+    modalCloseBtn.addEventListener('click', hideSuccessModal);
+    successModalOverlay.addEventListener('click', (e) => {
+        if (e.target === successModalOverlay) {
+            hideSuccessModal();
+        }
+    });
+    
+    // ESC key to close modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && successModalOverlay.classList.contains('show')) {
+            hideSuccessModal();
+        }
+    });
+
+    envConfigToggle.addEventListener('click', () => {
+        const content = document.getElementById('env-config-content');
+        const icon = envConfigToggle.querySelector('i');
+        content.classList.toggle('expanded');
+        if (content.classList.contains('expanded')) {
+            icon.style.transform = 'rotate(180deg)';
+            updateCollapsibleHeight('env-config-content');
+        } else {
+            icon.style.transform = 'rotate(0deg)';
+            content.style.maxHeight = null;
+        }
+    });
 
     mcpServersToggle.addEventListener('click', () => {
         const content = document.getElementById('mcp-servers');
@@ -648,6 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize
     loadConfig();
+    loadEnvConfig();
     loadLlmConfig();
     loadTools();
     clearChat(); // Add this line to display the initial message

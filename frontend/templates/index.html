@@ -30,6 +30,30 @@
             </div>
             <div class="sidebar-content">
                 <div class="collapsible-section">
+                    <button class="collapsible-header" id="env-config-toggle">
+                        <h3 class="sidebar-title">Environment Variables</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="collapsible-content env-config" id="env-config-content">
+                        <div class="env-config-form">
+                            <div class="env-variables-container" id="env-variables-container">
+                                <!-- Environment variables will be dynamically added here -->
+                            </div>
+                            <div class="env-actions">
+                                <button class="btn-add-env" id="add-env-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Add Variable
+                                </button>
+                                <button class="btn-save-config" id="save-env-config">
+                                    <i class="fas fa-save"></i>
+                                    Save .env File
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-section">
                     <button class="collapsible-header" id="llm-config-toggle">
                         <h3 class="sidebar-title">LLM Configuration</h3>
                         <i class="fas fa-chevron-down"></i>
@@ -124,6 +148,25 @@
             </div>
         </div>
     </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="success-modal-overlay">
+        <div class="success-modal" id="success-modal">
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="modal-message" id="modal-message-text">
+                    Success message here
+                </div>
+                <button class="modal-close-btn" id="modal-close-btn">
+                    <i class="fas fa-times"></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

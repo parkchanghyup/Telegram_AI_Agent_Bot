@@ -114,7 +114,7 @@ def validate_config():
 
     if LLM_PROVIDER == "openai":
         if not OPENAI_API_KEY:
-            raise ValueError("LLM_PROVIDER가 'openai'일 경우 OPENAI_API_KEY를 설정해야 합니다.")
+            raise ValueError("LLM_PROVIDER가 'openai'일 경우 OPENAI_API_KEY를 환경 변수로 설정해야 합니다.")
     elif LLM_PROVIDER not in ["ollama"]:
         raise ValueError(f"지원하지 않는 LLM_PROVIDER입니다: {LLM_PROVIDER}. 'openai' 또는 'ollama'를 사용하세요.")
 
