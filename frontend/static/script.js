@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show chat header when chat is cleared
         const chatHeader = document.querySelector('.chat-header');
         if (chatHeader) {
-            chatHeader.style.display = 'block';
+            chatHeader.style.display = 'flex';
         }
     };
 
@@ -293,6 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Environment Configuration functionality
     let envVariableCount = 0;
 
+    const escapeHTML = (str) => {
+        return str.replace(/"/g, '&quot;');
+    };
+
     const createEnvVariableRow = (key = '', value = '') => {
         const rowId = `env-row-${envVariableCount++}`;
         const rowDiv = document.createElement('div');
@@ -301,8 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         rowDiv.innerHTML = `
             <div class="env-inputs">
-                <input type="text" class="env-key" placeholder="새 변수 이름" value="${key}">
-                <input type="text" class="env-value" placeholder="값" value="${value}">
+                <input type="text" class="env-key" placeholder="새 변수 이름" value="${escapeHTML(key)}">
+                <input type="text" class="env-value" placeholder="값" value="${escapeHTML(value)}">
                 <button class="btn-delete-env" onclick="removeEnvVariable('${rowId}')" title="Delete variable">
                     ×
                 </button>
@@ -335,7 +339,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const equalIndex = trimmedLine.indexOf('=');
                 if (equalIndex > 0) {
                     const key = trimmedLine.substring(0, equalIndex).trim();
-                    const value = trimmedLine.substring(equalIndex + 1).trim();
+                    let value = trimmedLine.substring(equalIndex + 1).trim();
+                    // Strip quotes if they exist at both ends
+                    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                        value = value.substring(1, value.length - 1);
+                    }
                     variables.push({ key, value });
                 }
             }
