@@ -18,30 +18,26 @@ LLM_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'llm_config.json')
 MCP_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'mcp_config.json')
 
 # =============================================================================
-# Telegram Bot 설정
+# 필수 환경 변수
 # =============================================================================
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-
-# =============================================================================
-# LLM 설정
-# =============================================================================
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama").lower()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "conandoyle247/jan-nano-4b-gguf")
-
-# 모델 이름
-QA_MODEL_NAME = os.getenv("QA_MODEL_NAME", "gpt-5-nano")
-NAVER_MODEL_NAME = os.getenv("NAVER_MODEL_NAME", "gpt-5-mini")
-TRIAGE_MODEL_NAME = os.getenv("TRIAGE_MODEL_NAME", "gpt-5-mini")
 
 # =============================================================================
-# Naver API 설정
+# 추가 환경 변수
 # =============================================================================
 NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
 NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
 NAVER_NEWS_API_URL = "https://openapi.naver.com/v1/search/news.json"
 NAVER_NEWS_DEFAULT_COUNT = 5
+
+
+
+
+# =============================================================================
+# Naver API 설정
+# =============================================================================
+
 
 # =============================================================================
 # 네트워크 설정
@@ -103,6 +99,10 @@ def load_mcp_config():
     except json.JSONDecodeError:
         logging.error(f"{MCP_CONFIG_PATH} 파일 형식이 올바르지 않습니다.")
         return {}
+
+# LLM 설정 로드
+llm_config = load_llm_config()
+LLM_PROVIDER = llm_config.get("llm_provider", "openai")  # 기본값으로 openai 사용
 
 # =============================================================================
 # 설정 검증 함수
