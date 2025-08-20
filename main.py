@@ -185,6 +185,7 @@ def main() -> None:
         logging.error(f'tool 호출 실패: {e}', exc_info=True)
                 
 
+    print("\n✅ 서버가 성공적으로 실행되었습니다. 텔레그램 봇이 메시지를 기다리고 있습니다...")
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).post_shutdown(shutdown_servers).build()
 
     application.add_handler(CommandHandler("start", start))
