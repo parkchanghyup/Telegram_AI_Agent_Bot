@@ -37,7 +37,10 @@ async def setup_agent_and_servers():
             logging.info(f"MCP 서버 준비: name={server_name}, url={server_config['url']}")
             
             # 헤더 설정 (인증 등)
-            params = {"url": server_config["url"]}
+            params = {
+                "url": server_config["url"],
+                "timeout": 30.0  # 연결 타임아웃을 30초로 설정
+            }
             if "headers" in server_config:
                 params["headers"] = server_config["headers"]
             
