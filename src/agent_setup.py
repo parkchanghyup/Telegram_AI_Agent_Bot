@@ -39,14 +39,16 @@ async def setup_agent_and_servers():
             # 헤더 설정 (인증 등)
             params = {
                 "url": server_config["url"],
-                "timeout": 30.0  # 연결 타임아웃을 30초로 설정
+                "timeout": 30.0,  # 연결 타임아웃을 30초로 설정
+                "request_timeout": 120.0 # 요청 타임아웃을 120초로 설정
             }
             if "headers" in server_config:
                 params["headers"] = server_config["headers"]
             
             server = MCPServerStreamableHttp(
                 params=params,
-                cache_tools_list=True
+                cache_tools_list=True,
+                client_session_timeout_seconds=30.0
             )
         else:
             logging.info(f"MCP 서버 준비: name={server_name}, command={server_config.get('command')}, args={server_config.get('args', [])}")
@@ -64,9 +66,11 @@ async def setup_agent_and_servers():
                     "args": args,
                     "cwd": PROJECT_ROOT, # 작업 디렉토리를 프로젝트 루트로 설정
                     "env": os.environ, # 현재 환경 변수를 자식 프로세스에 전달
-                    "shell": True # 셸을 통해 명령 실행
+                    "shell": True, # 셸을 통해 명령 실행
+                    "request_timeout": 30.0 # 요청 타임아웃을 120초로 설정
                 },
-                cache_tools_list=True
+                cache_tools_list=True,
+                client_session_timeout_seconds=30.0
             )
         
         try:
