@@ -120,6 +120,19 @@ async def initialize_agent():
     """Initialize the MCP agent and servers."""
     global main_agent, mcp_servers, agent_ready
     
+    # Gracefully shut down existing servers before re-initializing
+    if mcp_servers:
+        print(f"🔄 Shutting down {len(mcp_servers)} existing MCP server(s)...")
+        try:
+            # Concurrently shut down all servers that have a 'close' method
+            await asyncio.gather(
+                *(server.close() for server in mcp_servers if hasattr(server, 'close'))
+            )
+            print("✅ Existing servers shut down successfully.")
+        except Exception as e:
+            print(f"⚠️ Warning: Error while shutting down existing servers: {e}")
+            # Continue with initialization anyway
+    
     # Reset previous state
     main_agent = None
     mcp_servers = []
@@ -465,7 +478,7 @@ def init_agent():
         future = asyncio.run_coroutine_threadsafe(initialize_agent(), background_loop)
         
         # Wait for the result with a timeout
-        success = future.result(timeout=60) # 60-second timeout for initialization
+        success = future.result(timeout=180) # 60-second timeout for initialization
         
         return jsonify({'success': success})
     except Exception as e:
