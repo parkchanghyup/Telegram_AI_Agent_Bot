@@ -20,8 +20,8 @@ MCP_CONFIG_PATH = os.path.join(PROJECT_ROOT, 'mcp_config.json')
 # =============================================================================
 # 필수 환경 변수
 # =============================================================================
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "TOKEN")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 # =============================================================================
 # 추가 환경 변수
@@ -103,6 +103,7 @@ def load_mcp_config():
 # LLM 설정 로드
 llm_config = load_llm_config()
 LLM_PROVIDER = llm_config.get("llm_provider", "openai")  # 기본값으로 openai 사용
+SUPPORTED_LLM_PROVIDERS = ["openai", "ollama"]
 
 # =============================================================================
 # 설정 검증 함수
@@ -110,13 +111,17 @@ LLM_PROVIDER = llm_config.get("llm_provider", "openai")  # 기본값으로 opena
 def validate_config():
     """필수 환경변수가 설정되었는지 확인합니다."""
     if not TELEGRAM_BOT_TOKEN:
-        raise ValueError("TELEGRAM_BOT_TOKEN 환경변수를 .env 파일에 설정해주세요.")
+        raise ValueError("TELEGRAM_BOT_TOKEN 환경변수를 설정해주세요.")
+
+    if LLM_PROVIDER not in SUPPORTED_LLM_PROVIDERS:
+        raise ValueError(
+            f"지원하지 않는 LLM_PROVIDER입니다: {LLM_PROVIDER}. "
+            f"지원하는 제공자: {', '.join(SUPPORTED_LLM_PROVIDERS)}"
+        )
 
     if LLM_PROVIDER == "openai":
         if not OPENAI_API_KEY:
             raise ValueError("LLM_PROVIDER가 'openai'일 경우 OPENAI_API_KEY를 환경 변수로 설정해야 합니다.")
-    elif LLM_PROVIDER not in ["ollama"]:
-        raise ValueError(f"지원하지 않는 LLM_PROVIDER입니다: {LLM_PROVIDER}. 'openai' 또는 'ollama'를 사용하세요.")
 
 def validate_naver_config():
     """Naver API 설정을 검증합니다."""
