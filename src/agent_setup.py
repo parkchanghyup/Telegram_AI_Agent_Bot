@@ -11,8 +11,13 @@ from .config import (
     load_mcp_config
 )
 
-async def setup_agent_and_servers():
-    """MCP 서버와 AI 에이전트를 설정합니다."""
+async def setup_agent_and_servers(available_servers=None):
+    """MCP 서버와 AI 에이전트를 설정합니다.
+    
+    Args:
+        available_servers (List[Dict]): 연결 확인된 서버들의 설정 리스트.
+                                       None인 경우 설정 파일에서 모든 서버를 로드합니다.
+    """
     mcp_servers = []
     server_names = []  # 서버 이름 저장용
     
@@ -24,10 +29,18 @@ async def setup_agent_and_servers():
     # LLMFactory 인스턴스 생성
     llm_factory = LLMFactory(llm_config)
     
-    # MCP 설정 로드
-    config = load_mcp_config()
+    # 사용할 서버 설정 결정
+    if available_servers is not None:
+        # 연결 확인된 서버들만 사용
+        server_configs = [s['config'] for s in available_servers]
+        print(f"🔍 연결 확인된 {len(server_configs)}개 서버로 초기화합니다.")
+    else:
+        # 기본 동작: 설정 파일에서 모든 서버를 로드
+        config = load_mcp_config()
+        server_configs = config.get('mcpServers', [])
+        print(f"🔍 설정 파일의 {len(server_configs)}개 서버로 초기화합니다.")
 
-    for server_config in config.get('mcpServers', []):
+    for server_config in server_configs:
         server_name = server_config.get('name')
         if not server_name:
             logging.warning("MCP 서버 설정에 'name' 필드가 없습니다. 건너뜁니다.")
@@ -76,15 +89,23 @@ async def setup_agent_and_servers():
         try:
             # 서버 연결 시도
             await server.connect()
-            logging.info(f"MCP 서버 연결 성공: name={server_name}")
+            if available_servers is not None:
+                print(f"✅ MCP 서버 연결 성공 (사전 확인됨): name={server_name}")
+            else:
+                logging.info(f"MCP 서버 연결 성공: name={server_name}")
             mcp_servers.append(server)
             server_names.append(server_name)  # 서버 이름도 함께 저장
         except Exception as e:
-            # Streamable HTTP 에러는 warning 레벨로 낮춤
-            if "Streamable HTTP" in str(e) or "Transport" in str(e):
-                logging.warning(f"MCP 서버 연결 실패 (일시적): name={server_name}, error={str(e)}")
+            # 이미 연결 확인된 서버들의 경우 연결 실패를 더 심각하게 처리
+            if available_servers is not None:
+                print(f"⚠️ 사전 확인된 MCP 서버 연결 실패: name={server_name}, error={str(e)}")
+                print(f"   서버 상태가 변경되었을 수 있습니다.")
             else:
-                logging.error(f"MCP 서버 연결 실패: name={server_name}, error={str(e)}")
+                # Streamable HTTP 에러는 warning 레벨로 낮춤
+                if "Streamable HTTP" in str(e) or "Transport" in str(e):
+                    logging.warning(f"MCP 서버 연결 실패 (일시적): name={server_name}, error={str(e)}")
+                else:
+                    logging.error(f"MCP 서버 연결 실패: name={server_name}, error={str(e)}")
             logging.info(f"MCP 서버 '{server_name}' 없이 계속 진행합니다.")
 
     # Load the universal prompt from file

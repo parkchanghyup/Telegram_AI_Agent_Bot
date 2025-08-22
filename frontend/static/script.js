@@ -486,10 +486,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (initResult.success) {
                 showSuccessModal('🎉 에이전트 초기화가 완료되었습니다!');
-                // Refresh config and tools
+                // Refresh config, tools, and server status
                 loadConfig();
                 loadLlmConfig();
                 loadTools();
+                loadServerStatus();
                 setTimeout(() => {
                     updateCollapsibleHeight('mcp-servers');
                     updateCollapsibleHeight('mcp-tools');
@@ -511,21 +512,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/config');
             const config = await response.json();
             currentConfig = config;
+            
+            // 초기에는 기존 방식으로 모든 서버 표시
             displayMcpServers(config.mcpServers || []);
+            
+            // 서버 상태는 별도로 로드 (이때 Active/Inactive 분리됨)
+            setTimeout(loadServerStatus, 100);
         } catch (error) {
             console.error('Error loading config:', error);
         }
     };
 
-    const displayMcpServers = (servers) => {
+    const displayMcpServers = (servers, activeServerNames = []) => {
         const serverListItems = document.getElementById('server-list-items');
         serverListItems.innerHTML = '';
 
-        servers.forEach((serverConfig, index) => {
-            const name = serverConfig.name || `Server-${index + 1}`;
-            const serverElement = createServerElement(name, serverConfig, index);
-            serverListItems.appendChild(serverElement);
-        });
+        // activeServerNames가 제공된 경우, 해당 서버들만 표시
+        if (activeServerNames.length > 0) {
+            const activeServers = servers.filter(server => 
+                activeServerNames.includes(server.name)
+            );
+            
+            activeServers.forEach((serverConfig, index) => {
+                const name = serverConfig.name || `Server-${index + 1}`;
+                const serverElement = createServerElement(name, serverConfig, index);
+                serverListItems.appendChild(serverElement);
+            });
+        } else {
+            // 기존 동작: 모든 서버 표시 (하위 호환성 유지)
+            servers.forEach((serverConfig, index) => {
+                const name = serverConfig.name || `Server-${index + 1}`;
+                const serverElement = createServerElement(name, serverConfig, index);
+                serverListItems.appendChild(serverElement);
+            });
+        }
 
         // Update collapsible section height after adding servers
         updateCollapsibleHeight('mcp-servers');
@@ -551,9 +571,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const serverName = currentConfig.mcpServers[index]?.name || `Server-${index + 1}`;
         if (confirm(`Are you sure you want to delete server "${serverName}"?`)) {
             currentConfig.mcpServers.splice(index, 1);
+            
+            // Active Servers 즉시 업데이트
             displayMcpServers(currentConfig.mcpServers);
+            
+            // Inactive Servers도 즉시 업데이트 (백엔드 호출 없이 직접 필터링)
+            updateInactiveServersAfterDeletion(serverName);
+            
             // Update height after server deletion
             setTimeout(() => updateCollapsibleHeight('mcp-servers'), 50);
+        }
+    };
+
+    // 삭제된 서버를 Inactive Servers에서도 제거하는 함수
+    const updateInactiveServersAfterDeletion = (deletedServerName) => {
+        const inactiveContainer = document.getElementById('inactive-server-list-items');
+        const inactiveItems = inactiveContainer.querySelectorAll('.server-item-simple.inactive');
+        
+        inactiveItems.forEach(item => {
+            const serverNameElement = item.querySelector('.server-name-simple');
+            if (serverNameElement && serverNameElement.textContent.includes(deletedServerName)) {
+                item.remove();
+            }
+        });
+        
+        // 만약 모든 inactive 서버가 삭제되었다면 기본 메시지 표시
+        if (inactiveContainer.children.length === 0) {
+            const noServersElement = document.createElement('div');
+            noServersElement.className = 'server-item-simple inactive';
+            noServersElement.innerHTML = `
+                <div class="server-item-content">
+                    <span class="server-name-simple">✅ 모든 서버가 정상 작동중입니다</span>
+                </div>
+            `;
+            inactiveContainer.appendChild(noServersElement);
         }
     };
 
@@ -765,6 +816,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update collapsible section height after adding tools
         updateCollapsibleHeight('mcp-tools');
+    };
+
+    // Server Status functionality
+    const loadServerStatus = async () => {
+        try {
+            const response = await fetch('/api/server-status');
+            const serverStatus = await response.json();
+            displayServerStatus(serverStatus);
+        } catch (error) {
+            console.error('Error loading server status:', error);
+            // 에러가 발생하면 기본 메시지 표시
+            displayServerStatus({
+                active_servers: [],
+                inactive_servers: [],
+                message: 'Failed to load server status'
+            });
+        }
+    };
+
+    const displayServerStatus = (serverStatus) => {
+        const activeContainer = document.getElementById('server-list-items');
+        const inactiveContainer = document.getElementById('inactive-server-list-items');
+        
+        // Active servers 표시: 기존 config와 active server 이름을 결합하여 표시
+        if (serverStatus.active_servers && serverStatus.active_servers.length > 0) {
+            const activeServerNames = serverStatus.active_servers.map(server => server.name);
+            displayMcpServers(currentConfig.mcpServers || [], activeServerNames);
+        } else {
+            // Active 서버가 없을 때
+            activeContainer.innerHTML = `
+                <div class="server-item-simple">
+                    <div class="server-item-content">
+                        <span class="server-name-simple">⚠️ 활성화된 서버가 없습니다</span>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Inactive servers 표시
+        inactiveContainer.innerHTML = '';
+        
+        if (serverStatus.inactive_servers && serverStatus.inactive_servers.length > 0) {
+            serverStatus.inactive_servers.forEach((server, index) => {
+                const serverElement = createInactiveServerElement(server, index);
+                inactiveContainer.appendChild(serverElement);
+            });
+        } else {
+            // 비활성 서버가 없을 때
+            const noServersElement = document.createElement('div');
+            noServersElement.className = 'server-item-simple inactive';
+            noServersElement.innerHTML = `
+                <div class="server-item-content">
+                    <span class="server-name-simple">✅ 모든 서버가 정상 작동중입니다</span>
+                </div>
+            `;
+            inactiveContainer.appendChild(noServersElement);
+        }
+
+        // Update collapsible section height after adding servers
+        updateCollapsibleHeight('mcp-servers');
+    };
+
+    const createInactiveServerElement = (server, index) => {
+        const serverDiv = document.createElement('div');
+        serverDiv.className = 'server-item-simple inactive';
+        
+        // 실제 config에서 해당 서버의 인덱스 찾기
+        const actualIndex = currentConfig.mcpServers ? 
+            currentConfig.mcpServers.findIndex(s => s.name === server.name) : -1;
+        
+        const errorMessage = server.error || 'Unknown error';
+        
+        serverDiv.innerHTML = `
+            <div class="server-item-content inactive-content">
+                <div class="server-line">
+                    <span class="server-name-simple">❌ ${server.name}</span>
+                    ${actualIndex >= 0 ? 
+                        `<button class="btn-delete-simple" onclick="deleteServer(${actualIndex})" title="Delete ${server.name}">
+                            <i class="fas fa-trash"></i>
+                        </button>` : ''
+                    }
+                </div>
+                <div class="server-error-line">
+                    ${errorMessage}
+                </div>
+            </div>
+        `;
+        return serverDiv;
     };
 
 

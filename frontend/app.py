@@ -4,8 +4,12 @@ import asyncio
 import json
 import logging
 import threading
+import subprocess
+from typing import List, Dict, Any, Optional
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
+from mcp import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
 
 class MCPErrorFilter(logging.Filter):
     """MCP 관련 무해한 에러들을 필터링하는 클래스"""
@@ -108,6 +112,8 @@ agent_ready = False
 #  dedicated asyncio event loop running in a background thread
 background_loop = None
 background_thread = None
+# Server status tracking
+all_server_status = []  # 모든 서버들의 연결 상태 정보 저장
 
 
 def start_background_loop(loop):
@@ -116,9 +122,176 @@ def start_background_loop(loop):
     loop.run_forever()
 
 
+async def check_http_server(server_config: Dict[str, Any]) -> Dict[str, Any]:
+    """HTTP URL 기반 MCP 서버의 연결을 확인합니다."""
+    server_name = server_config.get('name', 'Unknown')
+    url = server_config.get('url', '')
+    
+    result = {
+        'name': server_name,
+        'type': 'HTTP',
+        'url': url,
+        'status': 'FAILED',
+        'tools': [],
+        'error': None,
+        'config': server_config
+    }
+    
+    try:
+        print(f"🔍 HTTP 서버 연결 체크: {server_name} ({url})")
+        
+        # HTTP 클라이언트로 서버에 연결
+        async with streamablehttp_client(url) as (read, write, _):
+            async with ClientSession(read, write) as session:
+                # 연결 초기화
+                await session.initialize()
+                
+                # 도구 목록 조회
+                tools_result = await session.list_tools()
+                tool_names = [t.name for t in tools_result.tools]
+                
+                result['status'] = 'SUCCESS'
+                result['tools'] = tool_names
+                print(f"✅ {server_name}: {len(tool_names)}개 도구 발견")
+                
+    except Exception as e:
+        result['error'] = str(e)
+        print(f"❌ {server_name} 연결 실패: {e}")
+    
+    return result
+
+
+async def check_stdio_server(server_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Command/Args 기반 MCP 서버의 연결을 확인합니다."""
+    server_name = server_config.get('name', 'Unknown')
+    command = server_config.get('command', '')
+    args = server_config.get('args', [])
+    
+    result = {
+        'name': server_name,
+        'type': 'STDIO',
+        'command': command,
+        'args': args,
+        'status': 'FAILED',
+        'tools': [],
+        'error': None,
+        'config': server_config
+    }
+    
+    try:
+        print(f"🔍 STDIO 서버 연결 체크: {server_name} ({command} {' '.join(args)})")
+        
+        # 프로젝트 루트 디렉토리 설정
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        
+        # args에 포함된 스크립트 경로를 프로젝트 루트 기준으로 변환
+        processed_args = []
+        for arg in args:
+            if arg.startswith('src/'):
+                processed_args.append(os.path.join(project_root, arg))
+            else:
+                processed_args.append(arg)
+        
+        # 전체 명령어 구성
+        full_command = [command] + processed_args
+        
+        # subprocess를 사용하여 명령어 실행 가능성 확인
+        # 짧은 시간 후 종료하도록 타임아웃 설정
+        process = await asyncio.create_subprocess_exec(
+            *full_command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            cwd=project_root
+        )
+        
+        try:
+            # 3초 타임아웃으로 실행 (MCP 서버가 시작되는지만 확인)
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), 
+                timeout=3.0
+            )
+            
+            # 프로세스가 정상적으로 시작되었다면 성공으로 간주
+            result['status'] = 'SUCCESS'
+            result['tools'] = ['기본 확인됨']  # 실제 도구 목록은 복잡한 MCP 프로토콜 구현 필요
+            print(f"✅ {server_name}: 명령어 실행 가능")
+            
+        except asyncio.TimeoutError:
+            # 타임아웃은 서버가 계속 실행중임을 의미할 수 있으므로 성공으로 간주
+            result['status'] = 'SUCCESS'
+            result['tools'] = ['실행 중 확인됨']
+            print(f"✅ {server_name}: 서버가 실행 중 (타임아웃)")
+            
+        finally:
+            # 프로세스 정리
+            if process.returncode is None:
+                process.terminate()
+                try:
+                    await asyncio.wait_for(process.wait(), timeout=1.0)
+                except asyncio.TimeoutError:
+                    process.kill()
+                    
+    except FileNotFoundError:
+        result['error'] = f"명령어를 찾을 수 없습니다: {command}"
+        print(f"❌ {server_name} 연결 실패: 명령어 '{command}'를 찾을 수 없습니다")
+    except Exception as e:
+        result['error'] = str(e)
+        print(f"❌ {server_name} 연결 실패: {e}")
+    
+    return result
+
+
+async def check_all_mcp_servers_with_status() -> List[Dict[str, Any]]:
+    """모든 MCP 서버의 연결 상태를 확인하고 모든 서버들의 상태 정보를 반환합니다."""
+    config = load_mcp_config()
+    if not config:
+        print("❌ MCP 설정을 로드할 수 없습니다.")
+        return []
+    
+    servers = config.get('mcpServers', [])
+    if not servers:
+        print("⚠️ MCP 서버 설정이 없습니다.")
+        return []
+    
+    print(f"🔍 총 {len(servers)}개의 MCP 서버 연결 상태를 확인합니다...")
+    
+    results = []
+    for server_config in servers:
+        if 'url' in server_config:
+            # HTTP 기반 서버
+            result = await check_http_server(server_config)
+        elif 'command' in server_config:
+            # Command/Args 기반 서버
+            result = await check_stdio_server(server_config)
+        else:
+            # 알 수 없는 서버 타입
+            result = {
+                'name': server_config.get('name', 'Unknown'),
+                'type': 'UNKNOWN',
+                'status': 'FAILED',
+                'tools': [],
+                'error': 'Unknown server configuration type',
+                'config': server_config
+            }
+            print(f"❌ 알 수 없는 서버 설정: {result['name']}")
+        
+        results.append(result)
+    
+    # 연결 성공한 서버들만 카운트
+    successful_servers = [r for r in results if r['status'] == 'SUCCESS']
+    
+    print(f"📊 MCP 서버 연결 결과: {len(successful_servers)}/{len(results)} 서버 연결 성공")
+    for result in results:
+        status_icon = "✅" if result['status'] == 'SUCCESS' else "❌"
+        tool_count = len(result['tools'])
+        print(f"  {status_icon} {result['name']} ({result['type']}) - {tool_count}개 도구")
+    
+    return results  # 모든 서버 상태 반환
+
+
 async def initialize_agent():
     """Initialize the MCP agent and servers."""
-    global main_agent, mcp_servers, agent_ready
+    global main_agent, mcp_servers, agent_ready, all_server_status
     
     # Gracefully shut down existing servers before re-initializing
     if mcp_servers:
@@ -164,7 +337,25 @@ async def initialize_agent():
         print(f"🔍 PROJECT_ROOT exists: {os.path.exists(PROJECT_ROOT)}")
         print(f"🔍 src directory exists: {os.path.exists(os.path.join(PROJECT_ROOT, 'src'))}")
         
-        main_agent, mcp_servers, server_names = await setup_agent_and_servers()
+        # 🔍 먼저 MCP 서버들의 연결 상태를 확인
+        print("🔍 MCP 서버 연결 상태 확인 중...")
+        all_server_results = await check_all_mcp_servers_with_status()
+        
+        # 전역 변수에 저장
+        globals()['all_server_status'] = all_server_results
+        
+        # 연결 성공한 서버들만 필터링
+        available_servers = [r for r in all_server_results if r['status'] == 'SUCCESS']
+        
+        if not available_servers:
+            print("⚠️ 연결 가능한 MCP 서버가 없습니다. 서버 없이 에이전트를 초기화합니다.")
+            # 빈 서버 설정으로 에이전트 초기화
+            main_agent, mcp_servers, server_names = await setup_agent_and_servers(available_servers)
+        else:
+            print(f"✅ {len(available_servers)}개의 MCP 서버 연결 확인됨. 에이전트를 초기화합니다.")
+            # 연결 가능한 서버들만으로 에이전트 초기화
+            main_agent, mcp_servers, server_names = await setup_agent_and_servers(available_servers)
+        
         if main_agent and mcp_servers:
             agent_ready = True
             print(f"✅ MCP agent initialized successfully with {len(mcp_servers)} servers!")
@@ -456,6 +647,45 @@ def get_tools():
             tools_by_server[server_name] = [{"name": "Error", "description": str(e)}]
             
     return jsonify(tools_by_server)
+
+
+@app.route('/api/server-status', methods=['GET'])
+def get_server_status():
+    """Get status of all MCP servers (active and inactive)."""
+    global all_server_status
+    
+    if not all_server_status:
+        return jsonify({
+            'active_servers': [],
+            'inactive_servers': [],
+            'message': 'Server status not available. Try initializing the agent first.'
+        })
+    
+    # 서버들을 active와 inactive로 분류
+    active_servers = []
+    inactive_servers = []
+    
+    for server_status in all_server_status:
+        server_info = {
+            'name': server_status.get('name', 'Unknown'),
+            'type': server_status.get('type', 'Unknown'),
+            'tools_count': len(server_status.get('tools', [])),
+            'error': server_status.get('error'),
+            'status': server_status.get('status')
+        }
+        
+        if server_status.get('status') == 'SUCCESS':
+            active_servers.append(server_info)
+        else:
+            inactive_servers.append(server_info)
+    
+    return jsonify({
+        'active_servers': active_servers,
+        'inactive_servers': inactive_servers,
+        'total_servers': len(all_server_status),
+        'active_count': len(active_servers),
+        'inactive_count': len(inactive_servers)
+    })
 
 
 @app.route('/api/status', methods=['GET'])
