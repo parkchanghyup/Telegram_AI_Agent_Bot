@@ -36,34 +36,11 @@
                     </button>
                 </div>
 
-                <div class="collapsible-section">
-                    <button class="collapsible-header" id="llm-config-toggle">
-                        <h3 class="sidebar-title">LLM Configuration</h3>
-                        <i class="fas fa-chevron-down"></i>
+                <div class="sidebar-section">
+                    <button class="sidebar-action-btn" id="open-llm-modal-btn">
+                        <i class="fas fa-robot"></i>
+                        <span>LLM Configuration</span>
                     </button>
-                    <div class="collapsible-content llm-config" id="llm-config-content">
-                        <div class="llm-config-form">
-                            <div class="form-group">
-                                <label for="llm-provider">LLM Provider</label>
-                                <select id="llm-provider">
-                                    <option value="openai">OpenAI</option>
-                                    <option value="ollama">Ollama</option>
-                                </select>
-                            </div>
-                            <div class="form-group" id="model-name-group">
-                                <label for="model-name">Model Name</label>
-                                <input type="text" id="model-name" placeholder="e.g., gpt-4o-mini">
-                            </div>
-                            <div class="form-group" id="ollama-url-group" style="display: none;">
-                                <label for="ollama-url">Ollama Base URL</label>
-                                <input type="text" id="ollama-url" placeholder="http://localhost:11434/v1">
-                            </div>
-                            <button class="btn-save-config" id="save-llm-config">
-                                <i class="fas fa-save"></i>
-                                Save LLM Config
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="collapsible-section">
@@ -109,14 +86,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="collapsible-section">
-                    <button class="collapsible-header" id="mcp-tools-toggle">
-                        <h3 class="sidebar-title">MCP Tools</h3>
-                        <i class="fas fa-chevron-down"></i>
+                <div class="sidebar-section">
+                    <button class="sidebar-action-btn" id="open-mcp-tools-modal-btn">
+                        <i class="fas fa-tools"></i>
+                        <span>MCP Tools</span>
                     </button>
-                    <div class="collapsible-content mcp-tools" id="mcp-tools">
-                        <!-- MCP tools will be loaded here -->
-                    </div>
                 </div>
             </div>
         </div>
@@ -159,6 +133,48 @@
         </div>
     </div>
 
+    <!-- LLM Configuration Modal -->
+    <div class="modal-overlay" id="llm-modal-overlay">
+        <div class="env-modal" id="llm-modal"> <!-- Use env-modal for consistent styling -->
+            <div class="env-modal-content">
+                <div class="env-modal-header">
+                    <div class="env-header-content">
+                        <h2>LLM Configuration</h2>
+                        <p>사용할 LLM 공급자와 모델을 설정합니다.</p>
+                    </div>
+                    <button class="env-modal-close" id="llm-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="env-modal-body">
+                    <div class="llm-config-form">
+                        <div class="form-group">
+                            <label for="llm-provider">LLM Provider</label>
+                            <select id="llm-provider">
+                                <option value="openai">OpenAI</option>
+                                <option value="ollama">Ollama</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="model-name-group">
+                            <label for="model-name">Model Name</label>
+                            <input type="text" id="model-name" placeholder="e.g., gpt-4o-mini">
+                        </div>
+                        <div class="form-group" id="ollama-url-group" style="display: none;">
+                            <label for="ollama-url">Ollama Base URL</label>
+                            <input type="text" id="ollama-url" placeholder="http://localhost:11434/v1">
+                        </div>
+                    </div>
+                </div>
+                <div class="env-modal-footer">
+                    <button class="btn-save-config" id="save-llm-config">
+                        <i class="fas fa-save"></i>
+                        Save LLM Config
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Environment Variables Modal -->
     <div class="modal-overlay" id="env-modal-overlay">
         <div class="env-modal" id="env-modal">
@@ -186,6 +202,28 @@
                         <i class="fas fa-save"></i>
                         .env 파일 저장
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MCP Tools Modal -->
+    <div class="modal-overlay" id="mcp-tools-modal-overlay">
+        <div class="env-modal" id="mcp-tools-modal">
+            <div class="env-modal-content">
+                <div class="env-modal-header">
+                    <div class="env-header-content">
+                        <h2>MCP Tools</h2>
+                        <p>Available MCP tools from active servers.</p>
+                    </div>
+                    <button class="env-modal-close" id="mcp-tools-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="env-modal-body">
+                    <div class="mcp-tools-container" id="mcp-tools">
+                        <!-- MCP tools will be loaded here -->
+                    </div>
                 </div>
             </div>
         </div>

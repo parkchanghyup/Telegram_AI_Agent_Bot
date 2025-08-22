@@ -9,13 +9,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveBtn = document.getElementById('save-config');
     const newChatBtn = document.getElementById('new-chat-btn');
     const mcpServersToggle = document.getElementById('mcp-servers-toggle');
-    const mcpToolsToggle = document.getElementById('mcp-tools-toggle');
+    const openMcpToolsModalBtn = document.getElementById('open-mcp-tools-modal-btn');
     const mcpToolsContainer = document.getElementById('mcp-tools');
     const jsonImportTextarea = document.getElementById('json-import');
     const importJsonBtn = document.getElementById('import-json');
 
     // LLM Config Elements
-    const llmConfigToggle = document.getElementById('llm-config-toggle');
+    const openLlmModalBtn = document.getElementById('open-llm-modal-btn');
+    const llmModalOverlay = document.getElementById('llm-modal-overlay');
+    const llmModalClose = document.getElementById('llm-modal-close');
     const llmProviderSelect = document.getElementById('llm-provider');
     const modelNameInput = document.getElementById('model-name');
     const ollamaUrlInput = document.getElementById('ollama-url');
@@ -29,6 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const envVariablesContainer = document.getElementById('env-variables-container');
     const addEnvBtn = document.getElementById('add-env-btn');
     const saveEnvConfigBtn = document.getElementById('save-env-config');
+
+    // MCP Tools Modal Elements
+    const mcpToolsModalOverlay = document.getElementById('mcp-tools-modal-overlay');
+    const mcpToolsModalClose = document.getElementById('mcp-tools-modal-close');
 
     // Modal Elements
     const successModalOverlay = document.getElementById('success-modal-overlay');
@@ -276,6 +282,18 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     };
 
+    // LLM Modal functionality
+    const showLlmModal = () => {
+        llmModalOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        loadLlmConfig();
+    };
+
+    const hideLlmModal = () => {
+        llmModalOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    };
+
     // Environment Modal functionality
     const showEnvModal = () => {
         envModalOverlay.classList.add('show');
@@ -287,6 +305,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const hideEnvModal = () => {
         envModalOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    };
+
+    // MCP Tools Modal functionality
+    const showMcpToolsModal = () => {
+        mcpToolsModalOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const hideMcpToolsModal = () => {
+        mcpToolsModalOverlay.classList.remove('show');
         document.body.style.overflow = '';
     };
 
@@ -438,7 +467,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             ollamaUrlGroup.style.display = 'none';
         }
-        updateCollapsibleHeight('llm-config-content');
     };
 
     const saveLlmConfig = async () => {
@@ -462,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
             if (result.success) {
+                hideLlmModal(); // Close LLM modal first
                 showSuccessModal('✅ LLM 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
                 
                 // Reinitialize agent
@@ -494,7 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => {
                     updateCollapsibleHeight('mcp-servers');
                     updateCollapsibleHeight('mcp-tools');
-                    updateCollapsibleHeight('llm-config-content');
                 }, 100);
             } else {
                 appendMessage('bot-message', `⚠️ 에이전트 초기화 실패: ${initResult.error || 'Unknown error'}`);
@@ -772,7 +800,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!toolsByServer || Object.keys(toolsByServer).length === 0) {
             mcpToolsContainer.innerHTML = '<div class="tool-item"><span class="tool-description">No tools found. Please configure MCP servers and initialize the agent.</span></div>';
-            updateCollapsibleHeight('mcp-tools');
             return;
         }
         
@@ -923,6 +950,24 @@ document.addEventListener('DOMContentLoaded', () => {
     llmProviderSelect.addEventListener('change', toggleLlmFields);
     saveLlmConfigBtn.addEventListener('click', saveLlmConfig);
     
+    // LLM Modal event listeners
+    openLlmModalBtn.addEventListener('click', showLlmModal);
+    llmModalClose.addEventListener('click', hideLlmModal);
+    llmModalOverlay.addEventListener('click', (e) => {
+        if (e.target === llmModalOverlay) {
+            hideLlmModal();
+        }
+    });
+
+    // MCP Tools Modal event listeners
+    openMcpToolsModalBtn.addEventListener('click', showMcpToolsModal);
+    mcpToolsModalClose.addEventListener('click', hideMcpToolsModal);
+    mcpToolsModalOverlay.addEventListener('click', (e) => {
+        if (e.target === mcpToolsModalOverlay) {
+            hideMcpToolsModal();
+        }
+    });
+
     // Environment Modal event listeners
     openEnvModalBtn.addEventListener('click', showEnvModal);
     envModalClose.addEventListener('click', hideEnvModal);
@@ -953,6 +998,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideSuccessModal();
             } else if (envModalOverlay.classList.contains('show')) {
                 hideEnvModal();
+            } else if (llmModalOverlay.classList.contains('show')) {
+                hideLlmModal();
+            }
+            else if (mcpToolsModalOverlay.classList.contains('show')) {
+                hideMcpToolsModal();
             }
         }
     });
@@ -966,32 +1016,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (content.classList.contains('expanded')) {
             icon.style.transform = 'rotate(180deg)';
             updateCollapsibleHeight('mcp-servers');
-        } else {
-            icon.style.transform = 'rotate(0deg)';
-            content.style.maxHeight = null;
-        }
-    });
-
-    mcpToolsToggle.addEventListener('click', () => {
-        const content = document.getElementById('mcp-tools');
-        const icon = mcpToolsToggle.querySelector('i');
-        content.classList.toggle('expanded');
-        if (content.classList.contains('expanded')) {
-            icon.style.transform = 'rotate(180deg)';
-            updateCollapsibleHeight('mcp-tools');
-        } else {
-            icon.style.transform = 'rotate(0deg)';
-            content.style.maxHeight = null;
-        }
-    });
-
-    llmConfigToggle.addEventListener('click', () => {
-        const content = document.getElementById('llm-config-content');
-        const icon = llmConfigToggle.querySelector('i');
-        content.classList.toggle('expanded');
-        if (content.classList.contains('expanded')) {
-            icon.style.transform = 'rotate(180deg)';
-            updateCollapsibleHeight('llm-config-content');
         } else {
             icon.style.transform = 'rotate(0deg)';
             content.style.maxHeight = null;
