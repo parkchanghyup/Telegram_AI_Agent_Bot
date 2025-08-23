@@ -900,16 +900,123 @@ body {
     color: #5f6368;
 }
 
-/* Custom styling for the select dropdown arrow */
+/* Custom styling for LLM Provider dropdown */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    background-color: #1e1f20;
+    border: 1px solid #3c4043;
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: #e3e3e3;
+    font-size: 15px;
+    font-family: 'Google Sans', sans-serif;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 11;
+}
+
+.custom-select-trigger:hover {
+    border-color: #5f6368;
+    background-color: #23272a;
+}
+
+/* 드롭다운이 열렸을 때 트리거의 하단 모서리를 각지게 변경 */
+.custom-select-wrapper.open .custom-select-trigger {
+    border-radius: 8px 8px 0 0;
+    border-bottom: 2px solid #252627;  /* 구분선을 좀 더 두껍게, 어두운 색상으로 */
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    border-color: #4285f4;
+    background-color: #202224;  /* 트리거 배경색을 약간 더 어둡게 하여 구분 */
+}
+
+.custom-select-trigger::after {
+    content: '\f078'; /* FontAwesome chevron-down icon */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 0.8em;
+    color: #9aa0a6;
+    margin-left: 10px;
+    transition: transform 0.2s ease;
+}
+
+.custom-select-wrapper.open .custom-select-trigger::after {
+    transform: rotate(180deg);
+}
+
+.custom-options {
+    display: none;
+    position: absolute;
+    top: calc(100% - 2px);  /* 겹침 효과를 위해 2px 올림 (두꺼운 구분선에 맞춤) */
+    left: 0;
+    right: 0;
+    background-color: #1a1b1c;  /* 옵션 목록 배경색을 약간 더 어둡게 */
+    border: 1px solid #4285f4;  /* 트리거와 동일한 테두리 색상으로 통일 */
+    border-top: 1px solid #686868;  /* 상단 테두리 제거 */
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);  /* 그림자 강화 */
+    z-index: 10;  /* 트리거보다 낮은 z-index */
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0;  /* 간격 제거 */
+    padding-top: 4px;  /* 상단 여백 추가로 구분감 강화 */
+}
+
+.custom-select-wrapper.open .custom-options {
+    display: block;
+}
+
+.custom-option {
+    padding: 12px 16px;
+    color: #e3e3e3;
+    font-size: 15px;
+    font-family: 'Google Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(60, 64, 67, 0.2);
+    margin: 0 4px;
+}
+
+.custom-option:last-child {
+    border-bottom: none;
+}
+
+.custom-option:hover {
+    background-color: #252627;
+    color: #fff;
+    transform: translateX(2px);
+}
+
+.custom-option.selected {
+    background-color: rgba(66, 133, 244, 0.1);
+    color: #4285f4;
+    font-weight: 500;
+}
+
+.custom-option:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.custom-option:last-child {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    margin-bottom: 4px;
+}
+
+/* Hide the native select dropdown */
 .llm-config-form select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239aa0a6' class='bi bi-chevron-down' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 1em;
-    padding-right: 40px; /* Make space for the arrow */
+    display: none; 
 }
 
 #save-llm-config {
@@ -1222,7 +1329,6 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-
 .env-modal-content {
     display: flex;
     flex-direction: column;
@@ -1481,4 +1587,7 @@ body {
 .env-modal-footer #save-env-config:active {
     transform: scale(0.98);
 }
+
+
+
 

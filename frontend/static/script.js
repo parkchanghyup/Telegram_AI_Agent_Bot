@@ -18,11 +18,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const openLlmModalBtn = document.getElementById('open-llm-modal-btn');
     const llmModalOverlay = document.getElementById('llm-modal-overlay');
     const llmModalClose = document.getElementById('llm-modal-close');
-    const llmProviderSelect = document.getElementById('llm-provider');
     const modelNameInput = document.getElementById('model-name');
     const ollamaUrlInput = document.getElementById('ollama-url');
     const saveLlmConfigBtn = document.getElementById('save-llm-config');
     const ollamaUrlGroup = document.getElementById('ollama-url-group');
+
+    // Custom LLM Provider Dropdown functionality
+    const llmProviderWrapper = document.querySelector('.custom-select-wrapper');
+    const llmProviderTrigger = llmProviderWrapper.querySelector('.custom-select-trigger');
+    const llmProviderOptions = llmProviderWrapper.querySelectorAll('.custom-option');
+    const llmProviderNativeSelect = llmProviderWrapper.querySelector('#llm-provider');
+    const llmProviderSelect = llmProviderNativeSelect; // 동일한 요소 참조
+
+    // Toggle options list on trigger click
+    llmProviderTrigger.addEventListener('click', function () {
+        llmProviderWrapper.classList.toggle('open');
+    });
+
+    // Handle option selection
+    llmProviderOptions.forEach(option => {
+        option.addEventListener('click', function () {
+            // 1. Update the hidden select's value
+            llmProviderNativeSelect.value = this.dataset.value;
+
+            // 2. Update the visible trigger's text
+            llmProviderTrigger.textContent = this.textContent;
+
+            // 3. Close the dropdown
+            llmProviderWrapper.classList.remove('open');
+            
+            // (Additional) Dispatch a change event to notify value change
+            llmProviderNativeSelect.dispatchEvent(new Event('change'));
+            
+            // 4. Toggle fields based on selection
+            toggleLlmFields();
+        });
+    });
+
+    // Close dropdown if clicked outside
+    document.addEventListener('click', function(e) {
+        if (!llmProviderWrapper.contains(e.target)) {
+            llmProviderWrapper.classList.remove('open');
+        }
+    });
 
     // Environment Config Elements
     const openEnvModalBtn = document.getElementById('open-env-modal-btn');
@@ -462,6 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleLlmFields = () => {
         const provider = llmProviderSelect.value;
+        console.log('Provider changed to:', provider);
         if (provider === 'ollama') {
             ollamaUrlGroup.style.display = 'block';
         } else {
@@ -1030,3 +1069,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTools();
     clearChat(); // Add this line to display the initial message
 });
+
+
+

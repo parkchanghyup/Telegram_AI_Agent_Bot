@@ -133,47 +133,59 @@
         </div>
     </div>
 
+    <!-- 중복된 llm-provider 선택기 제거 -->
+
+
     <!-- LLM Configuration Modal -->
-    <div class="modal-overlay" id="llm-modal-overlay">
-        <div class="env-modal" id="llm-modal"> <!-- Use env-modal for consistent styling -->
-            <div class="env-modal-content">
-                <div class="env-modal-header">
-                    <div class="env-header-content">
-                        <h2>LLM Configuration</h2>
-                        <p>사용할 LLM 공급자와 모델을 설정합니다.</p>
-                    </div>
-                    <button class="env-modal-close" id="llm-modal-close">
-                        <i class="fas fa-times"></i>
-                    </button>
+<div class="modal-overlay" id="llm-modal-overlay">
+    <div class="env-modal" id="llm-modal">
+        <div class="env-modal-content">
+            <div class="env-modal-header">
+                <div class="env-header-content">
+                    <h2>LLM Configuration</h2>
+                    <p>사용할 LLM 공급자와 모델을 설정합니다.</p>
                 </div>
-                <div class="env-modal-body">
-                    <div class="llm-config-form">
-                        <div class="form-group">
-                            <label for="llm-provider">LLM Provider</label>
-                            <select id="llm-provider">
+                <button class="env-modal-close" id="llm-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="env-modal-body">
+                <div class="llm-config-form">
+                    
+                    <div class="form-group">
+                        <label for="llm-provider">LLM Provider</label>
+                        <div class="custom-select-wrapper">
+                            <div class="custom-select-trigger">OpenAI</div>
+                            <div class="custom-options">
+                                <div class="custom-option" data-value="openai">OpenAI</div>
+                                <div class="custom-option" data-value="ollama">Ollama</div>
+                            </div>
+                            <select id="llm-provider" style="display: none;">
                                 <option value="openai">OpenAI</option>
                                 <option value="ollama">Ollama</option>
                             </select>
                         </div>
-                        <div class="form-group" id="model-name-group">
-                            <label for="model-name">Model Name</label>
-                            <input type="text" id="model-name" placeholder="e.g., gpt-4o-mini">
-                        </div>
-                        <div class="form-group" id="ollama-url-group" style="display: none;">
-                            <label for="ollama-url">Ollama Base URL</label>
-                            <input type="text" id="ollama-url" placeholder="http://localhost:11434/v1">
-                        </div>
                     </div>
+                    <div class="form-group" id="model-name-group">
+                        <label for="model-name">Model Name</label>
+                        <input type="text" id="model-name" placeholder="e.g., gpt-4o-mini">
+                    </div>
+                    <div class="form-group" id="ollama-url-group" style="display: none;">
+                        <label for="ollama-url">Ollama Base URL</label>
+                        <input type="text" id="ollama-url" placeholder="http://localhost:11434/v1">
+                    </div>
+
                 </div>
-                <div class="env-modal-footer">
-                    <button class="btn-save-config" id="save-llm-config">
-                        <i class="fas fa-save"></i>
-                        Save LLM Config
-                    </button>
-                </div>
+            </div>
+            <div class="env-modal-footer">
+                <button class="btn-save-config" id="save-llm-config">
+                    <i class="fas fa-save"></i>
+                    Save LLM Config
+                </button>
             </div>
         </div>
     </div>
+</div>
 
     <!-- Environment Variables Modal -->
     <div class="modal-overlay" id="env-modal-overlay">
