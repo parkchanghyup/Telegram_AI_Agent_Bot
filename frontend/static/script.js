@@ -664,6 +664,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update height after server deletion
             setTimeout(() => updateCollapsibleHeight('mcp-servers'), 50);
+            
+            // 자동으로 설정 저장 및 에이전트 초기화 (Save Changes 기능 통합)
+            saveConfig();
         }
     };
 
@@ -782,7 +785,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 jsonImportTextarea.value = '';
                 // Update height after importing servers
                 setTimeout(() => updateCollapsibleHeight('mcp-servers'), 50);
-                alert(`Successfully imported ${importedCount} server(s). Don't forget to save your changes!`);
+                
+                // 자동으로 설정 저장 및 에이전트 초기화 (Save Changes 기능 통합)
+                saveConfig();
             } else {
                 alert('No valid server configurations found in the JSON.');
             }
@@ -1042,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarToggle.addEventListener('click', toggleSidebar);
     sidebarOpenBtn.addEventListener('click', toggleSidebar);
     newChatBtn.addEventListener('click', clearChat);
-    saveBtn.addEventListener('click', saveConfig);
+    // saveBtn.addEventListener('click', saveConfig); // Save Changes 버튼 제거됨
     addServerBtn.addEventListener('click', showServerImportModal);
     importJsonBtn.addEventListener('click', () => {
         importJson();
