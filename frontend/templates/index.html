@@ -29,20 +29,6 @@
                 </button>
             </div>
             <div class="sidebar-content">
-                <div class="sidebar-section">
-                    <button class="sidebar-action-btn" id="open-env-modal-btn">
-                        <i class="fas fa-cog"></i>
-                        <span>Environment Variables</span>
-                    </button>
-                </div>
-
-                <div class="sidebar-section">
-                    <button class="sidebar-action-btn" id="open-llm-modal-btn">
-                        <i class="fas fa-robot"></i>
-                        <span>LLM Configuration</span>
-                    </button>
-                </div>
-
                 <div class="section">
                     <div class="section-header" id="mcp-servers-header">
                         <h3 class="sidebar-title">MCP Servers</h3>
@@ -55,28 +41,48 @@
                         <div class="server-list-section">
                             <div class="list-header">
                                 <i class="fas fa-server"></i>
-                                <span>Active Servers</span>
+                                <span>Servers</span>
                             </div>
-                            <div id="server-list-items">
+                            <div class="server-list" id="server-list-items">
                                 <!-- MCP servers will be loaded here -->
-                            </div>
-                        </div>
-                        <div class="server-list-section">
-                            <div class="list-header inactive">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                <span>Inactive Servers</span>
-                            </div>
-                            <div id="inactive-server-list-items">
-                                <!-- Inactive MCP servers will be loaded here -->
+                                <!-- 서버 항목 예시:
+                                <div class="server-item">
+                                    <span class="status-indicator active"></span>
+                                    <div class="server-info">
+                                        <div class="server-name">서버명</div>
+                                    </div>
+                                    <button class="action-btn" title="삭제">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    </button>
+                                </div>
+                                -->
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="sidebar-section">
-                    <button class="sidebar-action-btn" id="open-mcp-tools-modal-btn">
-                        <i class="fas fa-tools"></i>
-                        <span>MCP Tools</span>
-                    </button>
+                
+                <div class="section">
+                    <div class="section-header">
+                        <h3 class="sidebar-title">CONFIGURATION</h3>
+                    </div>
+                    <div class="section-content">
+                        <div class="config-list">
+                            <button class="sidebar-action-btn" id="open-mcp-tools-modal-btn">
+                                <i class="fas fa-tools"></i>
+                                <span>MCP Tools</span>
+                            </button>
+                            
+                            <button class="sidebar-action-btn" id="open-env-modal-btn">
+                                <i class="fas fa-cog"></i>
+                                <span>Environment Variables</span>
+                            </button>
+                            
+                            <button class="sidebar-action-btn" id="open-llm-modal-btn">
+                                <i class="fas fa-robot"></i>
+                                <span>LLM Configuration</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

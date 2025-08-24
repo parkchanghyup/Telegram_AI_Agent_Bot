@@ -637,14 +637,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const createServerElement = (name, config, index) => {
         const serverDiv = document.createElement('div');
-        serverDiv.className = 'server-item-simple';
+        serverDiv.className = 'server-item';
         serverDiv.innerHTML = `
-            <div class="server-item-content">
-                <span class="server-name-simple">${name}</span>
-                <button class="btn-delete-simple" onclick="deleteServer(${index})" title="Delete ${name}">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <span class="status-indicator"></span>
+            <div class="server-info">
+                <div class="server-name">${name}</div>
             </div>
+            <button class="action-btn" title="삭제" onclick="deleteServer(${index})">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
         `;
         return serverDiv;
     };
@@ -670,28 +671,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // 삭제된 서버를 Inactive Servers에서도 제거하는 함수
+    // 삭제된 서버를 서버 목록에서도 제거하는 함수
     const updateInactiveServersAfterDeletion = (deletedServerName) => {
-        const inactiveContainer = document.getElementById('inactive-server-list-items');
-        const inactiveItems = inactiveContainer.querySelectorAll('.server-item-simple.inactive');
+        const serverContainer = document.getElementById('server-list-items');
+        const serverItems = serverContainer.querySelectorAll('.server-item');
         
-        inactiveItems.forEach(item => {
-            const serverNameElement = item.querySelector('.server-name-simple');
+        serverItems.forEach(item => {
+            const serverNameElement = item.querySelector('.server-name');
             if (serverNameElement && serverNameElement.textContent.includes(deletedServerName)) {
                 item.remove();
             }
         });
         
-        // 만약 모든 inactive 서버가 삭제되었다면 기본 메시지 표시
-        if (inactiveContainer.children.length === 0) {
+        // 만약 모든 서버가 삭제되었다면 기본 메시지 표시
+        if (serverContainer.children.length === 0) {
             const noServersElement = document.createElement('div');
-            noServersElement.className = 'server-item-simple inactive';
+            noServersElement.className = 'server-item';
             noServersElement.innerHTML = `
-                <div class="server-item-content">
-                    <span class="server-name-simple">✅ 모든 서버가 정상 작동중입니다</span>
+                <div class="server-info">
+                    <div class="server-name">⚠️ 등록된 서버가 없습니다</div>
                 </div>
             `;
-            inactiveContainer.appendChild(noServersElement);
+            serverContainer.appendChild(noServersElement);
         }
     };
 
@@ -965,74 +966,70 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const displayServerStatus = (serverStatus) => {
-        const activeContainer = document.getElementById('server-list-items');
-        const inactiveContainer = document.getElementById('inactive-server-list-items');
+        const serverListContainer = document.getElementById('server-list-items');
+        serverListContainer.innerHTML = '';
         
-        // Active servers 표시: 기존 config와 active server 이름을 결합하여 표시
+        // Active servers 먼저 표시
         if (serverStatus.active_servers && serverStatus.active_servers.length > 0) {
-            const activeServerNames = serverStatus.active_servers.map(server => server.name);
-            displayMcpServers(currentConfig.mcpServers || [], activeServerNames);
-        } else {
-            // Active 서버가 없을 때
-            activeContainer.innerHTML = `
-                <div class="server-item-simple">
-                    <div class="server-item-content">
-                        <span class="server-name-simple">⚠️ 활성화된 서버가 없습니다</span>
-                    </div>
-                </div>
-            `;
+            serverStatus.active_servers.forEach((server, index) => {
+                const serverElement = createServerWithStatusElement(server, index, 'active');
+                serverListContainer.appendChild(serverElement);
+            });
         }
         
         // Inactive servers 표시
-        inactiveContainer.innerHTML = '';
-        
         if (serverStatus.inactive_servers && serverStatus.inactive_servers.length > 0) {
             serverStatus.inactive_servers.forEach((server, index) => {
-                const serverElement = createInactiveServerElement(server, index);
-                inactiveContainer.appendChild(serverElement);
+                const serverElement = createServerWithStatusElement(server, index, 'inactive');
+                serverListContainer.appendChild(serverElement);
             });
-        } else {
-            // 비활성 서버가 없을 때
-            const noServersElement = document.createElement('div');
-            noServersElement.className = 'server-item-simple inactive';
-            noServersElement.innerHTML = `
-                <div class="server-item-content">
-                    <span class="server-name-simple">✅ 모든 서버가 정상 작동중입니다</span>
+        }
+        
+        // 서버가 하나도 없을 때
+        if ((!serverStatus.active_servers || serverStatus.active_servers.length === 0) && 
+            (!serverStatus.inactive_servers || serverStatus.inactive_servers.length === 0)) {
+            serverListContainer.innerHTML = `
+                <div class="server-item">
+                    <div class="server-info">
+                        <div class="server-name">⚠️ 등록된 서버가 없습니다</div>
+                    </div>
                 </div>
             `;
-            inactiveContainer.appendChild(noServersElement);
         }
 
         // Update collapsible section height after adding servers
         updateCollapsibleHeight('mcp-servers');
     };
 
-    const createInactiveServerElement = (server, index) => {
+    const createServerWithStatusElement = (server, index, status) => {
         const serverDiv = document.createElement('div');
-        serverDiv.className = 'server-item-simple inactive';
+        serverDiv.className = 'server-item';
         
         // 실제 config에서 해당 서버의 인덱스 찾기
         const actualIndex = currentConfig.mcpServers ? 
             currentConfig.mcpServers.findIndex(s => s.name === server.name) : -1;
         
-        const errorMessage = server.error || 'Unknown error';
+        const errorMessage = server.error || '';
+        const isActive = status === 'active';
         
         serverDiv.innerHTML = `
-            <div class="server-item-content inactive-content">
-                <div class="server-line">
-                    <span class="server-name-simple">❌ ${server.name}</span>
-                    ${actualIndex >= 0 ? 
-                        `<button class="btn-delete-simple" onclick="deleteServer(${actualIndex})" title="Delete ${server.name}">
-                            <i class="fas fa-trash"></i>
-                        </button>` : ''
-                    }
-                </div>
-                <div class="server-error-line">
-                    ${errorMessage}
-                </div>
+            <span class="status-indicator ${status}"></span>
+            <div class="server-info">
+                <div class="server-name">${server.name}</div>
+                ${!isActive && errorMessage ? `<div class="server-error" title="${errorMessage}">${errorMessage}</div>` : ''}
             </div>
+            ${actualIndex >= 0 ? 
+                `<button class="action-btn" title="삭제" onclick="deleteServer(${actualIndex})">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>` : ''
+            }
         `;
         return serverDiv;
+    };
+
+    // 이전 함수도 유지 (하위 호환성)
+    const createInactiveServerElement = (server, index) => {
+        return createServerWithStatusElement(server, index, 'inactive');
     };
 
 

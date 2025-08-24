@@ -635,6 +635,94 @@ body {
     margin-bottom: 15px;
 }
 
+/* 서버 목록 스타일 */
+.server-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 서버 항목 스타일 */
+.server-item {
+    background-color: #2a2b2c;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #3c4043;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 12px;
+}
+
+.server-item:hover {
+    background-color: #323436;
+}
+
+/* 상태 표시기 스타일 */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #333;
+    flex-shrink: 0;
+}
+
+.status-indicator.active {
+    background-color: #34a853;
+    box-shadow: 0 0 8px rgba(52, 168, 83, 0.5);
+}
+
+.status-indicator.inactive {
+    background-color: #ea4335;
+    box-shadow: 0 0 8px rgba(234, 67, 53, 0.5);
+}
+
+/* 서버 정보 스타일 */
+.server-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.server-name {
+    font-weight: 500;
+    font-size: 14px;
+    color: #e3e3e3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.server-error {
+    font-size: 12px;
+    color: #ff9999;
+    opacity: 0.8;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 액션 버튼 스타일 */
+.action-btn {
+    background-color: transparent;
+    border: none;
+    color: #ea4335;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: rgba(234, 67, 53, 0.2);
+}
+
+/* 이전 스타일 하위 호환성 유지 */
 .server-item-simple {
     background-color: #2a2b2c;
     border-radius: 6px;
@@ -683,8 +771,6 @@ body {
     padding-left: 0;
     margin-top: 2px;
 }
-
-
 
 .server-name-simple {
     font-weight: 500;
