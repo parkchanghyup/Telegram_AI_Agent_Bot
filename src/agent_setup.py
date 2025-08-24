@@ -61,7 +61,7 @@ async def setup_agent_and_servers(available_servers=None):
             server = MCPServerStreamableHttp(
                 params=params,
                 cache_tools_list=True,
-                client_session_timeout_seconds=30.0
+                client_session_timeout_seconds=60.0
             )
         else:
             logging.info(f"MCP 서버 준비: name={server_name}, command={server_config.get('command')}, args={server_config.get('args', [])}")
@@ -80,10 +80,10 @@ async def setup_agent_and_servers(available_servers=None):
                     "cwd": PROJECT_ROOT, # 작업 디렉토리를 프로젝트 루트로 설정
                     "env": os.environ, # 현재 환경 변수를 자식 프로세스에 전달
                     "shell": True, # 셸을 통해 명령 실행
-                    "request_timeout": 30.0 # 요청 타임아웃을 120초로 설정
+                    "request_timeout": 60.0 # 요청 타임아웃을 120초로 설정
                 },
                 cache_tools_list=True,
-                client_session_timeout_seconds=30.0
+                client_session_timeout_seconds=60.0
             )
         
         try:
