@@ -742,6 +742,23 @@ body {
     margin-right: auto;
 }
 
+.server-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.server-header {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.server-error-row {
+    padding-left: 25px;
+}
+
 /* 액션 버튼 스타일 */
 .action-btn {
     background: none;

@@ -1007,14 +1007,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const isActive = status === 'active';
         
         serverDiv.innerHTML = `
-            <span class="status-indicator ${status}"></span>
-            <span>${server.name}</span>
-            ${!isActive && errorMessage ? `<span class="server-error" title="${errorMessage}">${errorMessage}</span>` : ''}
-            ${actualIndex >= 0 ? 
-                `<button class="action-btn" title="삭제" onclick="deleteServer(${actualIndex})">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>` : ''
-            }
+            <div class="server-content">
+                <div class="server-header">
+                    <span class="status-indicator ${status}"></span>
+                    <span>${server.name}</span>
+                    ${actualIndex >= 0 ? 
+                        `<button class="action-btn" title="삭제" onclick="deleteServer(${actualIndex})">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>` : ''
+                    }
+                </div>
+                ${!isActive && errorMessage ? `<div class="server-error-row"><span class="server-error" title="${errorMessage}">${errorMessage}</span></div>` : ''}
+            </div>
         `;
         return serverDiv;
     };
