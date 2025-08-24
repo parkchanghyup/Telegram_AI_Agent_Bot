@@ -43,28 +43,19 @@
                     </button>
                 </div>
 
-                <div class="collapsible-section">
-                    <button class="collapsible-header" id="mcp-servers-toggle">
+                <div class="section">
+                    <div class="section-header" id="mcp-servers-header">
                         <h3 class="sidebar-title">MCP Servers</h3>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="collapsible-content mcp-servers" id="mcp-servers">
-                        <div class="json-import-simple">
-                            <div class="import-header">
-                                <i class="fas fa-file-import"></i>
-                                <span>Import Configuration</span>
-                            </div>
-                            <textarea id="json-import" placeholder='{"name": "server-name", "url": "https://temp.com", }'></textarea>
-                            <div class="import-buttons">
-                                <button class="btn-import-simple" id="import-json">
-                                    <i class="fas fa-plus"></i>
-                                    Import
-                                </button>
-                                <button class="btn-save-config" id="save-config">
-                                    <i class="fas fa-save"></i>
-                                    Save Changes
-                                </button>
-                            </div>
+                        <button class="add-server-btn" id="add-server-btn" title="Add new server">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="section-content mcp-servers" id="mcp-servers">
+                        <div class="save-config-container">
+                            <button class="btn-save-config" id="save-config">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
                         </div>
                         <div class="server-list-section">
                             <div class="list-header">
@@ -236,6 +227,38 @@
                     <div class="mcp-tools-container" id="mcp-tools">
                         <!-- MCP tools will be loaded here -->
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Server Import Modal -->
+    <div class="modal-overlay" id="server-import-modal-overlay">
+        <div class="env-modal" id="server-import-modal">
+            <div class="env-modal-content">
+                <div class="env-modal-header">
+                    <div class="env-header-content">
+                        <h2>Import MCP Server</h2>
+                        <p>Add a new MCP server configuration</p>
+                    </div>
+                    <button class="env-modal-close" id="server-import-modal-close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="env-modal-body">
+                    <div class="json-import-simple">
+                        <div class="import-header">
+                            <i class="fas fa-file-import"></i>
+                            <span>Server Configuration</span>
+                        </div>
+                        <textarea id="json-import" placeholder='{"name": "server-name", "url": "https://temp.com", }'></textarea>
+                    </div>
+                </div>
+                <div class="env-modal-footer">
+                    <button class="btn-import-simple" id="import-json">
+                        <i class="fas fa-plus"></i>
+                        Import Server
+                    </button>
                 </div>
             </div>
         </div>

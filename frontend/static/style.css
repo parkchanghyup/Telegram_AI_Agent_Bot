@@ -117,46 +117,59 @@ body {
     white-space: nowrap;
 }
 
-/* Collapsible Section */
-.collapsible-section {
+/* Section */
+.section {
     margin-bottom: 20px;
 }
 
-.collapsible-header {
-    background: none;
-    border: none;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
+.section-header {
     padding: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     text-align: left;
+    margin-bottom: 10px;
 }
 
-.collapsible-header .sidebar-title {
+.section-header .sidebar-title {
     margin: 0;
 }
 
-.collapsible-header i {
-    transition: transform 0.3s ease;
-}
-
-.collapsible-content {
-    max-height: 0;
-    overflow: hidden;
-    padding: 0 15px;
-    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+.section-content {
+    display: block;
+    padding: 15px;
     background-color: #2a2b2c;
     border-radius: 8px;
-    margin-top: 10px;
 }
 
-.collapsible-content.expanded {
-    /* max-height is now set by JS for smooth animation */
-    padding: 15px;
+/* Add Server Button */
+.add-server-btn {
+    background-color: #4285f4;
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-server-btn:hover {
+    background-color: #5a95f5;
+    transform: scale(1.1);
+}
+
+.save-config-container {
+    margin-bottom: 20px;
+}
+
+/* Server Import Modal */
+#server-import-modal-overlay {
+    z-index: 9998;
 }
 
 /* MCP Tool Styles */
@@ -212,6 +225,59 @@ body {
     max-height: 60vh;
     overflow-y: auto;
     padding-right: 15px;
+}
+
+.refresh-tools-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin-bottom: 15px;
+    width: 100%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.refresh-tools-btn:hover {
+    background-color: #0069d9;
+}
+
+.refresh-tools-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.refresh-tools-btn i {
+    margin-right: 8px;
+}
+
+.refresh-success-msg {
+    background-color: #28a745;
+    color: white;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    text-align: center;
+    animation: fadeIn 0.3s ease-in;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.refresh-success-msg i {
+    margin-right: 8px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 

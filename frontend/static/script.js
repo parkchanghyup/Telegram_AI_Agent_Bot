@@ -8,11 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const mcpServers = document.getElementById('mcp-servers');
     const saveBtn = document.getElementById('save-config');
     const newChatBtn = document.getElementById('new-chat-btn');
-    const mcpServersToggle = document.getElementById('mcp-servers-toggle');
+    const addServerBtn = document.getElementById('add-server-btn');
     const openMcpToolsModalBtn = document.getElementById('open-mcp-tools-modal-btn');
     const mcpToolsContainer = document.getElementById('mcp-tools');
     const jsonImportTextarea = document.getElementById('json-import');
     const importJsonBtn = document.getElementById('import-json');
+    
+    // Server Import Modal Elements
+    const serverImportModalOverlay = document.getElementById('server-import-modal-overlay');
+    const serverImportModalClose = document.getElementById('server-import-modal-close');
 
     // LLM Config Elements
     const openLlmModalBtn = document.getElementById('open-llm-modal-btn');
@@ -354,6 +358,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const hideMcpToolsModal = () => {
         mcpToolsModalOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    };
+    
+    // Server Import Modal functionality
+    const showServerImportModal = () => {
+        serverImportModalOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+        jsonImportTextarea.value = ''; // Clear previous input
+        jsonImportTextarea.focus();
+    };
+
+    const hideServerImportModal = () => {
+        serverImportModalOverlay.classList.remove('show');
         document.body.style.overflow = '';
     };
 
@@ -819,14 +836,55 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // MCP Tool functionality
-    const loadTools = async () => {
+    const loadTools = async (forceRefresh = false) => {
         try {
-            const response = await fetch('/api/tools');
+            // If it's a force refresh, show a loading state on the button
+            let refreshButton;
+            if (forceRefresh) {
+                refreshButton = document.querySelector('.refresh-tools-btn');
+                if (refreshButton) {
+                    refreshButton.disabled = true;
+                    refreshButton.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+                }
+            }
+            
+            // If forceRefresh is true, we add ?refresh=true to update the cache on server
+            const url = forceRefresh ? '/api/tools?refresh=true' : '/api/tools';
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const tools = await response.json();
             displayMcpTools(tools);
+            
+            // Add a refresh button if tools are loaded
+            refreshButton = document.createElement('button');
+            refreshButton.className = 'refresh-tools-btn';
+            refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Tools';
+            
+            // Add click handler with refresh notification
+            refreshButton.addEventListener('click', async () => {
+                await loadTools(true);
+                // After refresh completes successfully, show success message
+                const successMsg = document.createElement('div');
+                successMsg.className = 'refresh-success-msg';
+                successMsg.innerHTML = '<i class="fas fa-check-circle"></i> Tools refreshed!';
+                mcpToolsContainer.insertBefore(successMsg, mcpToolsContainer.firstChild.nextSibling);
+                
+                // Auto-hide success message after 3 seconds
+                setTimeout(() => {
+                    if (successMsg.parentNode) {
+                        successMsg.parentNode.removeChild(successMsg);
+                    }
+                }, 3000);
+            });
+            
+            // Add the refresh button at the top of the tools container
+            if (mcpToolsContainer.firstChild) {
+                mcpToolsContainer.insertBefore(refreshButton, mcpToolsContainer.firstChild);
+            } else {
+                mcpToolsContainer.appendChild(refreshButton);
+            }
         } catch (error) {
             console.error('Error loading tools:', error);
             mcpToolsContainer.innerHTML = `<div class="tool-item"><span class="tool-description error">Failed to load tools. See console for details.</span></div>`;
@@ -985,7 +1043,11 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebarOpenBtn.addEventListener('click', toggleSidebar);
     newChatBtn.addEventListener('click', clearChat);
     saveBtn.addEventListener('click', saveConfig);
-    importJsonBtn.addEventListener('click', importJson);
+    addServerBtn.addEventListener('click', showServerImportModal);
+    importJsonBtn.addEventListener('click', () => {
+        importJson();
+        hideServerImportModal(); // Close the modal after import
+    });
     llmProviderSelect.addEventListener('change', toggleLlmFields);
     saveLlmConfigBtn.addEventListener('click', saveLlmConfig);
     
@@ -1039,25 +1101,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 hideEnvModal();
             } else if (llmModalOverlay.classList.contains('show')) {
                 hideLlmModal();
-            }
-            else if (mcpToolsModalOverlay.classList.contains('show')) {
+            } else if (mcpToolsModalOverlay.classList.contains('show')) {
                 hideMcpToolsModal();
+            } else if (serverImportModalOverlay.classList.contains('show')) {
+                hideServerImportModal();
             }
         }
     });
 
 
 
-    mcpServersToggle.addEventListener('click', () => {
-        const content = document.getElementById('mcp-servers');
-        const icon = mcpServersToggle.querySelector('i');
-        content.classList.toggle('expanded');
-        if (content.classList.contains('expanded')) {
-            icon.style.transform = 'rotate(180deg)';
-            updateCollapsibleHeight('mcp-servers');
-        } else {
-            icon.style.transform = 'rotate(0deg)';
-            content.style.maxHeight = null;
+    // Server Import Modal event listeners
+    serverImportModalClose.addEventListener('click', hideServerImportModal);
+    serverImportModalOverlay.addEventListener('click', (e) => {
+        if (e.target === serverImportModalOverlay) {
+            hideServerImportModal();
         }
     });
 
@@ -1068,6 +1126,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLlmConfig();
     loadTools();
     clearChat(); // Add this line to display the initial message
+    
+    // Ensure MCP servers section is always expanded (no accordion functionality)
+    document.getElementById('mcp-servers').style.display = 'block';
 });
 
 
