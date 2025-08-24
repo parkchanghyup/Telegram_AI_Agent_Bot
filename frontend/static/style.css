@@ -1,8 +1,25 @@
 /* Basic Styles */
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+/* Theme variables based on temp.html */
+:root {
+    --bg-primary: #181C25;
+    --bg-secondary: #212633;
+    --bg-tertiary: #2C3242;
+    --text-primary: #E0E0E0;
+    --text-secondary: #A0AEC0;
+    --accent-primary: #3A82F6;
+    --accent-hover: #5A9BFF;
+    --status-active: #48BB78;
+    --status-inactive: #F56565;
+    --border-color: #3A4156;
+}
+
 body {
-    background-color: #131314;
-    color: #e3e3e3;
-    font-family: 'Google Sans', sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Noto Sans KR', 'Google Sans', sans-serif;
     margin: 0;
     height: 100vh;
     overflow: hidden;
@@ -13,29 +30,37 @@ body {
     height: 100vh;
 }
 
-/* Sidebar Styles (ChatGPT Layout, Gemini Colors) */
+/* Sidebar Styles - Updated with temp.html design */
 .sidebar {
     width: 400px;
-    background-color: #202123; /* A slightly different dark for contrast */
-    border-right: 1px solid #3c4043;
+    min-height: 95vh;
+    background-color: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
     transition: width 0.3s ease, padding 0.3s ease;
-    padding: 10px;
+    padding: 16px;
     box-sizing: border-box;
     z-index: 1000;
+    gap: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    border-radius: 12px;
+    margin: 10px;
 }
 
 .sidebar.collapsed {
     width: 0;
     padding: 0;
     overflow: hidden;
+    margin: 0;
+    border: none;
+    box-shadow: none;
 }
 
 .sidebar-header {
     display: flex;
-    flex-direction: column; /* 세로 배치 */
-    gap: 15px; /* 섹션 사이 간격 */
+    flex-direction: column;
+    gap: 15px;
     margin-bottom: 20px;
 }
 
@@ -44,6 +69,7 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    margin-bottom: -4px; /* 새 채팅 버튼과의 간격 미세 조정 */
 }
 
 .logo {
@@ -62,33 +88,38 @@ body {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 14px;
+    justify-content: center;
+    gap: 8px;
     background-color: transparent;
-    border: 1px solid #5f6368;
-    color: #e3e3e3;
-    padding: 14px 16px;
-    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 12px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
-    text-align: left;
+    text-align: center;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s, color 0.2s;
 }
 
 .new-chat-btn:hover {
-    background-color: #3c4043;
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
 }
 
 .sidebar-toggle {
-    background: transparent;
-    border: 1px solid #5f6368;
-    color: #e3e3e3;
-    padding: 10px;
-    border-radius: 6px;
+    background: none;
+    border: none;
+    color: #A0AEC0;
     cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s;
     margin-left: 10px;
-    transition: transform 0.3s ease;
 }
 
 .sidebar.collapsed .sidebar-toggle {
@@ -100,7 +131,6 @@ body {
     overflow-y: auto;
     opacity: 1;
     transition: opacity 0.2s ease;
-    padding-right: 12px; /* Add padding for scrollbar */
 }
 
 .sidebar.collapsed .sidebar-content {
@@ -108,14 +138,20 @@ body {
 }
 
 .sidebar-title {
-    font-size: 15px;
-    color: #9aa0a6;
-    margin: 24px 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #A0AEC0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
+    letter-spacing: 0.8px;
     white-space: nowrap;
+    margin: 0;
 }
+
+.sidebar-section h2.sidebar-title {
+    margin-bottom: 12px; /* Added margin below title text */
+}
+
+
 
 /* Section */
 .section {
@@ -123,13 +159,11 @@ body {
 }
 
 .section-header {
-    padding: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
     text-align: left;
-    margin-bottom: 10px;
 }
 
 .section-header .sidebar-title {
@@ -138,29 +172,36 @@ body {
 
 .section-content {
     display: block;
-    padding: 15px;
-    background-color: #2a2b2c;
+    padding: 8px;
+    padding-bottom: 24px;
     border-radius: 8px;
+}
+
+/* Separated MCP server items */
+.mcp-servers .server-item {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
 }
 
 /* Add Server Button */
 .add-server-btn {
-    background-color: #4285f4;
+    background: none;
     border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
+    color: #A0AEC0;
+    cursor: pointer;
+    padding: 4px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s, color 0.2s;
+    width: 28px;
+    height: 28px;
 }
 
 .add-server-btn:hover {
-    background-color: #5a95f5;
-    transform: scale(1.1);
+    background-color: #2C3242;
+    color: #E0E0E0;
 }
 
 .save-config-container {
@@ -628,60 +669,57 @@ body {
     background: #5f6368;
 }
 
-/* MCP Server Configuration Styles - Simplified */
-#server-list-items {
-    max-height: 200px;
-    overflow-y: auto;
-    margin-bottom: 15px;
-}
 
 /* 서버 목록 스타일 */
 .server-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 /* 서버 항목 스타일 */
 .server-item {
-    background-color: #2a2b2c;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    border: 1px solid #3c4043;
-    transition: background-color 0.2s ease;
+    width: 93%;
+    padding: 12px;
+    background-color: var(--bg-tertiary);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
     display: flex;
     align-items: center;
-    padding: 12px 16px;
     gap: 12px;
+    text-align: left;
 }
 
 .server-item:hover {
-    background-color: #323436;
+    background-color: #383e52;
 }
 
 /* 상태 표시기 스타일 */
 .status-indicator {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background-color: #333;
+    margin-right: 12px;
     flex-shrink: 0;
 }
 
 .status-indicator.active {
-    background-color: #34a853;
-    box-shadow: 0 0 8px rgba(52, 168, 83, 0.5);
+    background-color: var(--status-active);
 }
 
 .status-indicator.inactive {
-    background-color: #ea4335;
-    box-shadow: 0 0 8px rgba(234, 67, 53, 0.5);
+    background-color: var(--status-inactive);
 }
 
 /* 서버 정보 스타일 */
 .server-info {
-    flex: 1;
-    min-width: 0;
+    flex-grow: 1;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -689,37 +727,44 @@ body {
 
 .server-name {
     font-weight: 500;
-    font-size: 14px;
-    color: #e3e3e3;
+    color: #E0E0E0;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .server-error {
     font-size: 12px;
-    color: #ff9999;
-    opacity: 0.8;
+    color: #F56565;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-right: auto;
 }
 
 /* 액션 버튼 스타일 */
 .action-btn {
-    background-color: transparent;
+    background: none;
     border: none;
-    color: #ea4335;
-    padding: 6px;
-    border-radius: 4px;
+    color: #A0AEC0;
     cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s, color 0.2s;
+    margin-left: auto; /* Changed from 8px to auto for right alignment */
+    opacity: 0.5;
 }
 
 .action-btn:hover {
-    background-color: rgba(234, 67, 53, 0.2);
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.server-item:hover .action-btn {
+    opacity: 1;
 }
 
 /* 이전 스타일 하위 호환성 유지 */
@@ -803,23 +848,7 @@ body {
 }
 
 /* Scrollbar for server list */
-#server-list-items::-webkit-scrollbar {
-    width: 6px;
-}
-
-#server-list-items::-webkit-scrollbar-track {
-    background: #1e1f20;
-    border-radius: 3px;
-}
-
-#server-list-items::-webkit-scrollbar-thumb {
-    background: #3c4043;
-    border-radius: 3px;
-}
-
-#server-list-items::-webkit-scrollbar-thumb:hover {
-    background: #5f6368;
-}
+/* Server list scrollbar removed */
 
 
 
@@ -1305,39 +1334,45 @@ body {
     flex: 1;
 }
 
-/* Sidebar Action Button Styles */
+/* Sidebar Action Button Styles - Updated */
 .sidebar-section {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
-.sidebar-action-btn {
+.config-list {
+    display: flex;
+    padding: 8px;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sidebar-action-btn, .config-action-btn {
     width: 100%;
-    background: linear-gradient(135deg, #4285f4, #1a73e8);
-    color: white;
+    padding: 12px;
+    background-color: var(--bg-tertiary);
     border: none;
-    padding: 16px 20px;
-    border-radius: 10px;
+    border-radius: 8px;
+    color: var(--text-primary);
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s;
     display: flex;
     align-items: center;
     gap: 12px;
-    font-family: 'Google Sans', sans-serif;
     text-align: left;
-    justify-content: flex-start;
 }
 
-.sidebar-action-btn:hover {
-    background: linear-gradient(135deg, #3367d6, #185abc);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(66, 133, 244, 0.4);
+.sidebar-action-btn:hover, .config-action-btn:hover {
+    background-color: #383e52;
 }
 
-.sidebar-action-btn i {
+.sidebar-action-btn i, .config-action-btn i, .sidebar-action-btn svg, .config-action-btn svg {
     font-size: 18px;
     flex-shrink: 0;
+    width: 24px; /* Fixed width for icon area */
+    display: flex;
+    justify-content: center;
 }
 
 /* Success Modal Styles */
@@ -1356,7 +1391,7 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
-#env-modal-overlay, #llm-modal-overlay {
+#env-modal-overlay, #llm-modal-overlay, #mcp-tools-modal-overlay {
     z-index: 9998;
 }
 
@@ -1740,6 +1775,12 @@ body {
     transform: scale(0.98);
 }
 
-
+/* Add sidebar top nav styles from temp.html */
+.sidebar-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -4px;
+}
 
 

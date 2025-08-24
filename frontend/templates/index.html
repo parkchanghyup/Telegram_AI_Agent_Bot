@@ -16,74 +16,67 @@
     <div class="app-container">
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="header-top">
+            <div class="sidebar-top-nav">
+                <div class="logo">
                     <img src="{{ url_for('static', filename='mcp-8x.png') }}" alt="MCP Logo" class="logo">
-                    <button class="sidebar-toggle" id="sidebar-toggle" title="Collapse sidebar">
-                        <i class="fas fa-bars"></i>
-                    </button>
                 </div>
+                <button class="sidebar-toggle" id="sidebar-toggle" title="Collapse sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <div class="sidebar-header">
                 <button class="new-chat-btn" id="new-chat-btn">
                     <i class="fas fa-plus"></i>
                     <span>New Chat</span>
                 </button>
             </div>
+            
             <div class="sidebar-content">
-                <div class="section">
+                <section class="sidebar-section">
                     <div class="section-header" id="mcp-servers-header">
-                        <h3 class="sidebar-title">MCP Servers</h3>
+                        <h2 class="section-title sidebar-title">MCP Servers</h2>
                         <button class="add-server-btn" id="add-server-btn" title="Add new server">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
                     <div class="section-content mcp-servers" id="mcp-servers">
-                        <!-- Save Changes 버튼 제거됨 -->
-                        <div class="server-list-section">
-                            <div class="list-header">
-                                <i class="fas fa-server"></i>
-                                <span>Servers</span>
-                            </div>
-                            <div class="server-list" id="server-list-items">
-                                <!-- MCP servers will be loaded here -->
-                                <!-- 서버 항목 예시:
-                                <div class="server-item">
-                                    <span class="status-indicator active"></span>
-                                    <div class="server-info">
-                                        <div class="server-name">서버명</div>
-                                    </div>
-                                    <button class="action-btn" title="삭제">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    </button>
+                        <div class="server-list" id="server-list-items">
+                            <!-- MCP servers will be loaded here -->
+                            <!-- 서버 항목 예시:
+                            <div class="server-item">
+                                <span class="status-indicator active"></span>
+                                <div class="server-info">
+                                    <div class="server-name">서버명</div>
                                 </div>
-                                -->
+                                <button class="action-btn" title="삭제">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
                             </div>
+                            -->
                         </div>
                     </div>
-                </div>
+                </section>
                 
-                <div class="section">
-                    <div class="section-header">
-                        <h3 class="sidebar-title">CONFIGURATION</h3>
+                <section class="sidebar-section">
+                    <h2 class="section-title sidebar-title">CONFIGURATION</h2>
+                    <div class="config-list">
+                        <button class="config-action-btn" id="open-env-modal-btn">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Environment Variables</span>
+                        </button>
+                        
+                        <button class="config-action-btn" id="open-llm-modal-btn">
+                            <i class="fas fa-robot"></i>
+                            <span>LLM Configuration</span>
+                        </button>
+                        
+                        <button class="config-action-btn" id="open-mcp-tools-modal-btn">
+                            <i class="fas fa-tools"></i>
+                            <span>MCP Tools</span>
+                        </button>
                     </div>
-                    <div class="section-content">
-                        <div class="config-list">
-                            <button class="sidebar-action-btn" id="open-mcp-tools-modal-btn">
-                                <i class="fas fa-tools"></i>
-                                <span>MCP Tools</span>
-                            </button>
-                            
-                            <button class="sidebar-action-btn" id="open-env-modal-btn">
-                                <i class="fas fa-cog"></i>
-                                <span>Environment Variables</span>
-                            </button>
-                            
-                            <button class="sidebar-action-btn" id="open-llm-modal-btn">
-                                <i class="fas fa-robot"></i>
-                                <span>LLM Configuration</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                </section>
             </div>
         </div>
 

@@ -640,9 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
         serverDiv.className = 'server-item';
         serverDiv.innerHTML = `
             <span class="status-indicator"></span>
-            <div class="server-info">
-                <div class="server-name">${name}</div>
-            </div>
+            <span>${name}</span>
             <button class="action-btn" title="삭제" onclick="deleteServer(${index})">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
@@ -688,9 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const noServersElement = document.createElement('div');
             noServersElement.className = 'server-item';
             noServersElement.innerHTML = `
-                <div class="server-info">
-                    <div class="server-name">⚠️ 등록된 서버가 없습니다</div>
-                </div>
+                <span>⚠️ 등록된 서버가 없습니다</span>
             `;
             serverContainer.appendChild(noServersElement);
         }
@@ -990,9 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
             (!serverStatus.inactive_servers || serverStatus.inactive_servers.length === 0)) {
             serverListContainer.innerHTML = `
                 <div class="server-item">
-                    <div class="server-info">
-                        <div class="server-name">⚠️ 등록된 서버가 없습니다</div>
-                    </div>
+                    <span>⚠️ 등록된 서버가 없습니다</span>
                 </div>
             `;
         }
@@ -1014,10 +1008,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         serverDiv.innerHTML = `
             <span class="status-indicator ${status}"></span>
-            <div class="server-info">
-                <div class="server-name">${server.name}</div>
-                ${!isActive && errorMessage ? `<div class="server-error" title="${errorMessage}">${errorMessage}</div>` : ''}
-            </div>
+            <span>${server.name}</span>
+            ${!isActive && errorMessage ? `<span class="server-error" title="${errorMessage}">${errorMessage}</span>` : ''}
             ${actualIndex >= 0 ? 
                 `<button class="action-btn" title="삭제" onclick="deleteServer(${actualIndex})">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
