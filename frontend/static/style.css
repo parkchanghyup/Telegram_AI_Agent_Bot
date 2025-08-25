@@ -399,9 +399,7 @@ body {
 
 .chat-warning {
     margin-top: 20px;
-    padding: 12px 16px;
-    background-color: rgba(234, 67, 53, 0.1);
-    border: 1px solid rgba(234, 67, 53, 0.3);
+    padding: 4px 16px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -419,7 +417,7 @@ body {
 
 .chat-warning p {
     margin: 0;
-    color: #e3e3e3;
+    color: #9aa0a6;
     font-size: 14px;
     line-height: 1.5;
     font-weight: 500;
