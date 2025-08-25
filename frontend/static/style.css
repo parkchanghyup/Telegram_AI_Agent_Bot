@@ -88,12 +88,12 @@ body {
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: left;
     gap: 8px;
     background-color: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
-    padding: 12px;
+    padding: 15px;
     border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
@@ -113,13 +113,20 @@ body {
     border: none;
     color: #A0AEC0;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 50%;
+    padding: 8px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s, color 0.2s;
     margin-left: 10px;
+    width: 32px;
+    height: 32px;
+}
+
+.sidebar-toggle:hover {
+    background-color: rgba(160, 174, 192, 0.2);
+    color: #ffffff;
 }
 
 .sidebar.collapsed .sidebar-toggle {
@@ -418,6 +425,7 @@ body {
     color: #e3e3e3;
     align-self: flex-end;
     margin-left: auto;
+    margin-right: 16px
 }
 
 .chat-box .bot-message {
@@ -924,11 +932,9 @@ body {
 
 /* Simple JSON Import Section */
 .json-import-simple {
-    background-color: #2a2b2c;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 24px;
-    border: 1px solid #3c4043;
+
+    padding: 12px;
+
 }
 
 .import-header {
@@ -955,8 +961,8 @@ body {
     font-size: 12px;
     font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
     resize: vertical;
-    min-height: 120px;
-    max-height: 150px;
+    min-height: 200px;
+    max-height: 250px;
     box-sizing: border-box;
     transition: border-color 0.2s ease;
     margin-bottom: 10px;
@@ -1365,7 +1371,7 @@ body {
 
 .sidebar-action-btn, .config-action-btn {
     width: 100%;
-    padding: 12px;
+    padding: 15px;
     background-color: var(--bg-tertiary);
     border: none;
     border-radius: 8px;
@@ -1593,7 +1599,7 @@ body {
 
 .env-modal-body {
     flex: 1;
-    padding: 28px;
+    padding: 16px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
