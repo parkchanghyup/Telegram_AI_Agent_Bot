@@ -1,142 +1,142 @@
 # Telegram MCP Bot
 
-An extensible Telegram bot that uses LLMs (OpenAI or Ollama) and connects to MCP (Multi‑Capability) servers to perform tool‑augmented tasks.
+An extensible Telegram bot that uses LLMs (OpenAI or Ollama) and connects to MCP (Multi‑Capability) servers to perform tool‑augmented tasks. This project also includes a web application to easily configure and test MCP servers.
 
 ## Quick start
 
-### 1) Configure environment variables
+### 1) Prerequisites
 
-Create a `.env` file in the project root and set the variables for your environment:
+- Install Python dependencies:
+  ```bash
+  pip install -r requirements.txt
+  ```
+- **(Optional)** For connecting to [Smithery.ai](https://smithery.ai/) servers, it is recommended to install Node.js and `npx`.
+
+### 2) Configure Environment and LLM
+
+Configuration is split into two files: `.env` for secrets and `llm_config.json` for LLM settings.
+
+**a) Create a `.env` file** in the project root for secrets:
 
 ```env
 # Telegram Bot
-TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"ㅋ
+TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
 
-# LLM provider: "openai" or "ollama"
-LLM_PROVIDER="openai"
-
-# --- OpenAI settings (when LLM_PROVIDER=openai) ---
+# OpenAI API Key (required if you use openai)
 OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-# Optional model overrides
-# QA_MODEL_NAME="gpt-5-nano"
-# NAVER_MODEL_NAME="gpt-5-mini"
-# TRIAGE_MODEL_NAME="gpt-5-mini"
 
-# --- Ollama settings (when LLM_PROVIDER=ollama) ---
-OLLAMA_BASE_URL="http://localhost:11434/v1"
-# If not set, defaults to "conandoyle247/jan-nano-4b-gguf" as configured in src/config.py
-# OLLAMA_MODEL="llama3.1"
-
-# --- Naver Search MCP server ---
+# Naver Search MCP server credentials
 NAVER_CLIENT_ID="YOUR_NAVER_CLIENT_ID"
 NAVER_CLIENT_SECRET="YOUR_NAVER_CLIENT_SECRET"
 ```
 
-Notes:
-- The bot loads configuration from `.env` at startup.
-- When `LLM_PROVIDER=openai`, `OPENAI_API_KEY` is required.
-- When `LLM_PROVIDER=ollama`, the code uses an OpenAI‑compatible client pointed at `OLLAMA_BASE_URL` and the `OLLAMA_MODEL` name.
+**b) Edit `llm_config.json`** for LLM provider settings:
 
-### 2) Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 3) Configure MCP servers
-
-`mcp_config.json` defines the MCP servers the bot will start and connect to. By default, a Naver News search server is included.
-
-Key points:
-- `command` is the Python interpreter to run the server (e.g., `python` or your virtualenv path).
-- Provide script paths in `args`. Paths starting with `src/` are automatically resolved relative to the project root.
-
-Example `mcp_config.json`:
+This file configures which LLM provider to use (`openai` or `ollama`) and which model to use.
 
 ```json
 {
-  "mcpServers": {
-    "naver-search": {
-      "command": "python",
-      "args": ["src/naver_mcp_server.py"]
-    }
-  }
+    "llm_provider": "openai",
+    "model_name": "gpt-4o-mini",
+    "ollama_base_url": "http://localhost:11434/v1"
 }
 ```
 
-You can add more servers by inserting additional entries under `mcpServers`.
+- When `llm_provider` is `"openai"`, `OPENAI_API_KEY` in `.env` is used.
+- When `llm_provider` is `"ollama"`, the bot connects to an OpenAI-compatible endpoint at `ollama_base_url`.
 
-### 4) Run the bot
+### 3) Configure MCP Servers
+
+`mcp_config.json` defines the MCP servers the bot will start and connect to. You can configure it in two ways:
+
+1.  **(Recommended) Use the Web Application**: A simple way to add, manage, and test MCP servers.
+2.  **Manually edit `mcp_config.json`**: Directly modify the configuration file.
+
+A detailed guide is available in the "Extending the Bot" section below.
+
+### 4) Run the Application
+
+We recommend starting the web application first to configure and test your MCP servers.
+
+**a) Run the Web Application:**
+
+```bash
+python frontend/app.py
+```
+
+Open your browser to the local address provided to manage your MCP servers.
+
+**b) Run the Telegram Bot:**
 
 ```bash
 python main.py
 ```
 
-Once running, open Telegram and send a message to your bot. The active agent will respond using the configured LLM provider.
+Once running, open Telegram and send a message to your bot. The active agent will respond using the configured LLM and MCP tools.
 
 ## How it works
 
-- A triage agent routes requests to specialized agents:
-  - QnA Agent (general questions)
-  - Naver Search Agent (news search via the MCP server)
-- The Naver MCP server calls Naver’s news API, fetches full article text, and returns structured results to the agent.
+The bot operates with a single, powerful agent. This agent connects to the LLM you've configured (either from OpenAI or Ollama) and is equipped with all the tools provided by the MCP servers listed in `mcp_config.json`. When you send a message, the agent interprets your request, selects the appropriate tool from its available MCP capabilities, and responds accordingly.
 
-## Extending the bot (add MCP tools and agents)
+## Extending the Bot: Adding MCP Tools
 
-### 1) Implement a new MCP server
+### 1) Add a New MCP Server
 
-Place your server script under `src/`, for example `src/my_custom_server.py`. Expose tools using the FastMCP interface so agents can call them.
+You can add any MCP-compatible server. This is particularly easy for servers listed on [Smithery.ai](https://smithery.ai/).
 
-### 2) Register the server in `mcp_config.json`
+**Method A: Using the Web Application (Recommended)**
 
-```json
-{
-  "mcpServers": {
-    "naver-search": {
-      "command": "python",
-      "args": ["src/naver_mcp_server.py"]
-    },
-    "my-custom-server": {
-      "command": "python",
-      "args": ["src/my_custom_server.py"]
-    }
+Start the web app (`python frontend/app.py`) and use the UI to add or remove MCP server configurations. The changes will be automatically saved to `mcp_config.json`.
+
+**Method B: Manually Editing `mcp_config.json`**
+
+You can add different types of servers:
+
+- **Smithery Servers**: Find a server on Smithery and paste its configuration.
+  ```json
+  {
+    "mcpServers": [
+      {
+        "command": "npx",
+        "args": [
+          "-y", "@smithery/cli@latest", "run", "@upstash/context7-mcp",
+          "--key", "YOUR_SMITHY_KEY"
+        ],
+        "name": "context7-mcp"
+      }
+    ]
   }
-}
-```
+  ```
 
-### 3) Create a new agent in `src/agent_setup.py`
+- **Remote Servers**: Add a server by its name and URL.
+  ```json
+  {
+      "name": "sample-mcp-server",
+      "url": "https://sample-mcp-url.io"
+  }
+  ```
 
-In `setup_agent_and_servers`, load your prompt and include the agent. Example:
+- **Local Python Servers**: Run a custom server from a local script.
+  ```json
+  {
+      "args": ["src/naver_mcp_server.py"],
+      "command": "python",
+      "name": "naver-search-server"
+  }
+  ```
 
-```python
-CUSTOM_AGENT_INSTRUCTIONS = load_prompt("custom_agent.txt", prompt_base_dir)
-custom_server = mcp_server_map.get("my-custom-server")
+### 2) Implement a Custom Python MCP Server
 
-custom_agent = Agent(
-    name="Custom Function Agent",
-    instructions=CUSTOM_AGENT_INSTRUCTIONS,
-    model=llm_factory.create_llm_model("gpt-5-nano"),
-    mcp_servers=[custom_server] if custom_server else []
-)
-
-triage_agent = Agent(
-    name="Triage Agent",
-    instructions=TRIAGE_AGENT_INSTRUCTIONS,
-    handoffs=[naver_agent, qa_agent, custom_agent],
-    model=llm_factory.get_triage_model()
-)
-```
-
-Add the corresponding prompt file under `src/prompt/custom_agent.txt`.
+You can create your own tools by implementing a local MCP server.
+- Place your server script under the `src/` directory.
+- Use `src/naver_mcp_server.py` as a reference for implementing the FastMCP interface.
 
 ## Logging
 
 - Application logs are written to stdout and to `logs/bot.log`.
-- The Naver MCP server writes to `logs/naver_mcp_server.log`.
 
 ## Troubleshooting
 
-- Missing `TELEGRAM_BOT_TOKEN`: set it in `.env`.
-- `LLM_PROVIDER=openai` requires `OPENAI_API_KEY`.
-- `LLM_PROVIDER=ollama` requires a running Ollama instance with OpenAI‑compatible API at `OLLAMA_BASE_URL` and a valid `OLLAMA_MODEL`.
-- Naver search requires `NAVER_CLIENT_ID` and `NAVER_CLIENT_SECRET`.
+- **Missing `TELEGRAM_BOT_TOKEN`**: Set it in your `.env` file.
+- **`LLM_PROVIDER="openai"` fails**: Ensure `OPENAI_API_KEY` is set correctly in `.env`.
+- **`LLM_PROVIDER="ollama"` fails**: Make sure a running Ollama instance with an OpenAI-compatible API is available at `OLLAMA_BASE_URL` and a valid model is specified in `llm_config.json`.

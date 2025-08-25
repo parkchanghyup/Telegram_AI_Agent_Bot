@@ -26,17 +26,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 # =============================================================================
 # 추가 환경 변수
 # =============================================================================
-NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
-NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
-NAVER_NEWS_API_URL = "https://openapi.naver.com/v1/search/news.json"
-NAVER_NEWS_DEFAULT_COUNT = 5
-
-
-
-
-# =============================================================================
-# Naver API 설정
-# =============================================================================
+# NAVER_CLIENT_ID = os.getenv("NAVER_CLIENT_ID")
+# NAVER_CLIENT_SECRET = os.getenv("NAVER_CLIENT_SECRET")
+# NAVER_NEWS_API_URL = "https://openapi.naver.com/v1/search/news.json"
+# NAVER_NEWS_DEFAULT_COUNT = 5
 
 
 # =============================================================================
@@ -123,10 +116,11 @@ def validate_config():
         if not OPENAI_API_KEY:
             raise ValueError("LLM_PROVIDER가 'openai'일 경우 OPENAI_API_KEY를 환경 변수로 설정해야 합니다.")
 
-def validate_naver_config():
-    """Naver API 설정을 검증합니다."""
-    if not NAVER_CLIENT_ID or not NAVER_CLIENT_SECRET:
-        raise ValueError("환경변수 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET가 설정되지 않았습니다.")
+
+# def validate_naver_config():
+#     """Naver API 설정을 검증합니다."""
+#     if not NAVER_CLIENT_ID or not NAVER_CLIENT_SECRET:
+#         raise ValueError("환경변수 NAVER_CLIENT_ID와 NAVER_CLIENT_SECRET가 설정되지 않았습니다.")
 
 # =============================================================================
 # 초기화
