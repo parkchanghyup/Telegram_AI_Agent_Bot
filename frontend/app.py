@@ -80,6 +80,11 @@ if os.path.exists(env_path):
     print(f"✅ .env file loaded successfully")
 else:
     print(f"❌ .env file not found at {env_path}")
+    print(f"✨ Creating a new .env file at {env_path}")
+    with open(env_path, 'w') as f:
+        f.write("TELEGRAM_BOT_TOKEN=\n")
+    print("✅ New .env file created. Please add your TELEGRAM_BOT_TOKEN.")
+    load_dotenv(env_path, override=True)
 
 # Set environment variables for OpenAI (if not already set)
 if not os.getenv("OPENAI_API_KEY"):
