@@ -104,19 +104,41 @@
         </div>
     </div>
 
-    <!-- Success Modal -->
-    <div class="modal-overlay" id="success-modal-overlay">
-        <div class="success-modal" id="success-modal">
+    <!-- 진행 중 모달 (스피너 포함) -->
+    <div class="modal-overlay" id="progress-modal-overlay">
+        <div class="success-modal" id="progress-modal">
             <div class="modal-content">
-                <div class="modal-icon">
+                <!-- 스피너 요소 -->
+                <div class="spinner" id="modal-spinner"></div>
+                
+                <h1 class="modal-title">설정 저장 완료</h1>
+                <p class="modal-message">
+                    <span class="primary-text" id="progress-message-text">에이전트를 초기화하는 중입니다.</span>
+                    <br>
+                    <span class="secondary-text">팝업을 닫아도 백그라운드에서 계속 진행됩니다.</span>
+                </p>
+                <button class="modal-close-btn" id="progress-close-btn">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 완료 모달 (성공 아이콘 포함) -->
+    <div class="modal-overlay" id="complete-modal-overlay">
+        <div class="success-modal" id="complete-modal">
+            <div class="modal-content">
+                <!-- 성공 아이콘 추가 -->
+                <div class="success-icon">
                     <i class="fas fa-check-circle"></i>
                 </div>
-                <div class="modal-message" id="modal-message-text">
-                    Success message here
+                
+                <h1 class="modal-title">초기화 완료</h1>
+                <div class="modal-message" id="complete-message-text">
+                    완료되었습니다!
                 </div>
-                <button class="modal-close-btn" id="modal-close-btn">
-                    <i class="fas fa-times"></i>
-                    Close
+                <button class="modal-close-btn" id="complete-close-btn">
+                    확인
                 </button>
             </div>
         </div>
