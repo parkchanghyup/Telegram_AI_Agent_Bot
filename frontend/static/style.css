@@ -812,6 +812,7 @@ body {
 .action-btn:hover {
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
+    border-radius: 8px;
 }
 
 .server-item:hover .action-btn {
