@@ -1458,23 +1458,65 @@ body {
     border: 1px solid #3c4043;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     max-width: 400px;
-    width: 90%;
+    width: 90%; /* 모바일에서는 화면 너비의 90% */
+    max-height: 90vh; /* 화면 높이의 90% 이상 차지하지 않도록 제한 */
     animation: modalSlideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* 내용이 넘치지 않도록 함 */
+}
+
+/* 데스크톱에서는 황금비율(1:1.618)에 가깝게 적용, 하지만 높이는 자동으로 조정됨 */
+@media (min-width: 500px) {
+    .success-modal {
+        width: 400px; /* 고정 너비 */
+        min-height: 240px; /* 최소 높이만 지정하고 내용에 따라 자동 조절되도록 함 */
+    }
 }
 
 .modal-content {
-    padding: 24px;
+    padding: 24px 24px 20px;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    justify-content: flex-start; /* 위에서부터 콘텐츠 배치 */
+    gap: 10px;
+    box-sizing: border-box; /* padding이 height에 포함되도록 설정 */
+    /* height: 100% 제거 - 내용에 맞춰 자동 조절 */
 }
 
-.modal-icon {
-    font-size: 48px;
+/* 성공 아이콘 스타일 */
+.success-icon {
+    font-size: 42px;
     color: #34a853;
-    animation: iconPulse 0.6s ease-out;
+    margin-bottom: 4px;
+    animation: iconPopIn 0.5s ease-out;
+    flex-shrink: 0;
+}
+
+@keyframes iconPopIn {
+    0% {
+        transform: scale(0.6);
+        opacity: 0;
+    }
+    70% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-title {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 4px;
+    font-family: 'Google Sans', sans-serif;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .modal-message {
@@ -1483,31 +1525,67 @@ body {
     font-weight: 500;
     line-height: 1.4;
     font-family: 'Google Sans', sans-serif;
+    text-align: center;
+}
+
+.modal-message .primary-text {
+    color: #ffffff;
+}
+
+.modal-message .secondary-text {
+    color: #9aa0a6;
+    font-size: 14px;
+    font-weight: 400;
 }
 
 .modal-close-btn {
     background: linear-gradient(135deg, #4285f4, #1a73e8);
     color: white;
     border: none;
-    padding: 14px 28px;
-    border-radius: 25px;
+    padding: 8px 12px;
+    border-radius: 8px;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-family: 'Google Sans', sans-serif;
-    margin-top: 8px;
-    min-width: 120px;
     justify-content: center;
+    font-family: 'Google Sans', sans-serif;
+    margin-top: 14px;
+    min-width: 70px;
+    align-self: center; /* 가운데 정렬 */
 }
 
 .modal-close-btn:hover {
     background: linear-gradient(135deg, #3367d6, #185abc);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+}
+
+/* 스피너 스타일 */
+/* 원형 스피너 - 일반 문서 흐름에 맞게 수정 */
+.spinner {
+    width: 48px;
+    height: 48px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 5px solid #444;
+    border-top-color: #7B61FF;
+    margin: 0 auto;
+    padding: 0;
+    flex-shrink: 0; /* 크기 유지 */
+    animation: spin 1s linear infinite;
+    display: block; /* 블록 요소로 변경 */
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Modal Animations */
@@ -1531,19 +1609,7 @@ body {
     }
 }
 
-@keyframes iconPulse {
-    0% {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
+/* 아이콘 펄스 애니메이션 제거됨 */
 
 /* Environment Variables Modal Styles */
 .env-modal {

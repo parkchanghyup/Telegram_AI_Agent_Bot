@@ -78,10 +78,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const mcpToolsModalOverlay = document.getElementById('mcp-tools-modal-overlay');
     const mcpToolsModalClose = document.getElementById('mcp-tools-modal-close');
 
-    // Modal Elements
-    const successModalOverlay = document.getElementById('success-modal-overlay');
-    const modalMessageText = document.getElementById('modal-message-text');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
+    // Modal Elements - 진행 중 모달
+    const progressModalOverlay = document.getElementById('progress-modal-overlay');
+    const progressMessageText = document.getElementById('progress-message-text');
+    const progressCloseBtn = document.getElementById('progress-close-btn');
+    
+    // Modal Elements - 완료 모달
+    const completeModalOverlay = document.getElementById('complete-modal-overlay');
+    const completeMessageText = document.getElementById('complete-message-text');
+    const completeCloseBtn = document.getElementById('complete-close-btn');
 
 
 
@@ -308,20 +313,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Success Modal functionality
-    const showSuccessModal = (message) => {
-        modalMessageText.textContent = message;
-        successModalOverlay.classList.add('show');
+    // 진행 중 모달 기능
+    const showProgressModal = (message) => {
+        // 메시지 설정 (첫 번째 문장만 변경)
+        if (progressMessageText) {
+            // 메시지에서 필요한 부분만 추출
+            const mainMessage = message.includes('에이전트를 초기화') 
+                ? '에이전트를 초기화하는 중입니다.' 
+                : message;
+                
+            progressMessageText.textContent = mainMessage;
+        }
+        
+        // 모달 표시
+        progressModalOverlay.classList.add('show');
         
         // Prevent body scroll when modal is open
         document.body.style.overflow = 'hidden';
     };
 
-    const hideSuccessModal = () => {
-        successModalOverlay.classList.remove('show');
+    const hideProgressModal = () => {
+        progressModalOverlay.classList.remove('show');
         
         // Restore body scroll
         document.body.style.overflow = '';
+    };
+    
+    // 완료 모달 기능
+    const showCompleteModal = (message) => {
+        // 메시지 설정
+        if (completeMessageText) {
+            completeMessageText.textContent = message;
+        }
+        
+        // 모달 표시
+        completeModalOverlay.classList.add('show');
+        
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+    };
+
+    const hideCompleteModal = () => {
+        completeModalOverlay.classList.remove('show');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+    };
+    
+    // 하위 호환성을 위한 기존 함수 유지 (showSuccessModal -> showProgressModal로 리다이렉트)
+    const showSuccessModal = (message) => {
+        // 먼저 모든 모달 닫기 (중복 표시 방지)
+        hideProgressModal();
+        hideCompleteModal();
+        
+        // 메시지에 따라 적절한 모달 표시
+        if (message.includes('초기화가 완료')) {
+            showCompleteModal(message);
+        } else {
+            showProgressModal(message);
+        }
+    };
+    
+    const hideSuccessModal = () => {
+        hideProgressModal();
+        hideCompleteModal();
     };
 
     // LLM Modal functionality
@@ -547,7 +602,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 hideLlmModal(); // Close LLM modal first
-                showSuccessModal('✅ LLM 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
+                // 다른 모달 닫고 진행 중 모달 표시
+                hideCompleteModal();
+                showProgressModal('✅ LLM 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
                 
                 // Reinitialize agent
                 reinitializeApp();
@@ -570,7 +627,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const initResult = await initResponse.json();
             
             if (initResult.success) {
-                showSuccessModal('🎉 에이전트 초기화가 완료되었습니다!');
+                // 진행 중 모달을 닫고 완료 모달로 전환
+                hideProgressModal();
+                setTimeout(() => {
+                    showCompleteModal('에이전트 초기화가 완료되었습니다!');
+                }, 300); // 잠시 지연 후 완료 모달 표시
+                
                 // Refresh config, tools, and server status
                 loadConfig();
                 loadLlmConfig();
@@ -823,7 +885,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.success) {
                 // Show initial success message
-                showSuccessModal('✅ 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
+                // 다른 모달 닫고 진행 중 모달 표시
+                hideCompleteModal();
+                showProgressModal('✅ 설정이 저장되었습니다. 에이전트를 초기화하는 중...');
                 
                 // Reinitialize agent after successful save
                 reinitializeApp();
@@ -1076,10 +1140,19 @@ document.addEventListener('DOMContentLoaded', () => {
     saveEnvConfigBtn.addEventListener('click', saveEnvConfig);
     
     // Success Modal event listeners
-    modalCloseBtn.addEventListener('click', hideSuccessModal);
-    successModalOverlay.addEventListener('click', (e) => {
-        if (e.target === successModalOverlay) {
-            hideSuccessModal();
+    // 진행 중 모달 이벤트 리스너
+    progressCloseBtn.addEventListener('click', hideProgressModal);
+    progressModalOverlay.addEventListener('click', (e) => {
+        if (e.target === progressModalOverlay) {
+            hideProgressModal();
+        }
+    });
+    
+    // 완료 모달 이벤트 리스너
+    completeCloseBtn.addEventListener('click', hideCompleteModal);
+    completeModalOverlay.addEventListener('click', (e) => {
+        if (e.target === completeModalOverlay) {
+            hideCompleteModal();
         }
     });
     
@@ -1093,8 +1166,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ESC key to close modals
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (successModalOverlay.classList.contains('show')) {
-                hideSuccessModal();
+            if (progressModalOverlay.classList.contains('show')) {
+                hideProgressModal();
+            } else if (completeModalOverlay.classList.contains('show')) {
+                hideCompleteModal();
             } else if (envModalOverlay.classList.contains('show')) {
                 hideEnvModal();
             } else if (llmModalOverlay.classList.contains('show')) {
