@@ -1,6 +1,9 @@
 # Telegram MCP Bot
 
-An extensible Telegram bot that uses LLMs (OpenAI or Ollama) and connects to MCP (Multi‑Capability) servers to perform tool‑augmented tasks. This project also includes a web application to easily configure and test MCP servers.
+An extensible Telegram bot that uses LLMs (OpenAI or Ollama) and connects to MCP (Model Context Protocol) servers to perform tool‑augmented tasks. This project also includes a web application to easily configure and test MCP servers.
+
+## Architecture
+![architecture](images/architecture.png)
 
 ## Quick start
 
@@ -65,6 +68,9 @@ python frontend/app.py
 ```
 
 Open your browser to the local address provided to manage your MCP servers.
+
+**web application sample**
+![architecture](images/web_application.png)
 
 **b) Run the Telegram Bot:**
 
