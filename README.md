@@ -1,13 +1,18 @@
 # Telegram MCP Bot
 
+> **Note**: This is the initial version of the project. We welcome contributions and feedback!
+
 An extensible Telegram bot that uses LLMs (OpenAI or Ollama) and connects to MCP (Model Context Protocol) servers to perform tool‑augmented tasks. This project also includes a web application to easily configure and test MCP servers.
 
 ### web application sample 
 ![web_apolication_example](images/web_application_example.gif)
 
+<br/>    
 
 ## Architecture
 ![architecture](images/architecture.png)
+
+<br/>    
 
 ## Quick start
 
@@ -84,9 +89,13 @@ python main.py
 
 Once running, open Telegram and send a message to your bot. The active agent will respond using the configured LLM and MCP tools.
 
+<br/>    
+
 ## How it works
 
 The bot operates with a single, powerful agent. This agent connects to the LLM you've configured (either from OpenAI or Ollama) and is equipped with all the tools provided by the MCP servers listed in `mcp_config.json`. When you send a message, the agent interprets your request, selects the appropriate tool from its available MCP capabilities, and responds accordingly.
+
+<br/>    
 
 ## Extending the Bot: Adding MCP Tools
 
@@ -141,12 +150,27 @@ You can create your own tools by implementing a local MCP server.
 - Place your server script under the `src/` directory.
 - Use `src/naver_mcp_server.py` as a reference for implementing the FastMCP interface.
 
+<br/>    
+
 ## Logging
 
 - Application logs are written to stdout and to `logs/bot.log`.
+
+<br/>    
 
 ## Troubleshooting
 
 - **Missing `TELEGRAM_BOT_TOKEN`**: Set it in your `.env` file.
 - **`LLM_PROVIDER="openai"` fails**: Ensure `OPENAI_API_KEY` is set correctly in `.env`.
 - **`LLM_PROVIDER="ollama"` fails**: Make sure a running Ollama instance with an OpenAI-compatible API is available at `OLLAMA_BASE_URL` and a valid model is specified in `llm_config.json`.
+
+<br/>    
+
+## Future Work
+
+We are continuously working to improve the Telegram MCP Bot. Here are some features and enhancements planned for future releases:
+
+*   **Multi-Turn Conversations**: Enhancing the agent's ability to remember context from previous interactions for more natural, ongoing conversations.
+*   **Expanded LLM Support**: Integrating with a wider variety of LLM providers and models beyond OpenAI and Ollama.
+*   **Fine-Grained LLM Control**: Introducing options to adjust detailed LLM parameters such as system prompts, temperature, and more.
+*   **Multi-Agent Architecture**: Evolving from a single agent to a multi-agent system, allowing for specialized agents to collaborate on complex tasks.
